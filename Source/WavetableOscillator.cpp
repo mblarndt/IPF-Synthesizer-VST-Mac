@@ -70,6 +70,7 @@ void WavetableOscillator::resetIPF()
     g_plus = 0;
     g_delta = 0;
     amplitude = 0;
+    ipf_counter = 0;
 }
 
 float WavetableOscillator::interpolateLinearly() const
@@ -83,17 +84,23 @@ float WavetableOscillator::interpolateLinearly() const
 
 float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2)
 {
-    float g_pl = g - log( (1 / alpha) * (g - (beta * exp(g - g_pre) + gamma * exp(g - g_pre_2) )  )  );
-    //float g_pl = g - log((1 / alpha) * (g - (beta * exp(g - g_pre))));
-    DBG(beta);
+    float g_pl;
+    switch(ipf_counter) {
+
+        case 0:
+            g_pl = g - log( (1 / alpha) * (g));
+        case 1:
+            g_pl = g - log( (1 / alpha) * (g - (beta * exp(g - g_pre))));
+        default:
+            g_pl = g - log( (1 / alpha) * (g - (beta * exp(g - g_pre) + gamma * exp(g - g_pre_2) )  )  );
+    }
+    ipf_counter++;
+    
     return g_pl;
 }
 
 float WavetableOscillator::calculate_amp()
 {
-
-    
-
     g_plus = ipf(alpha, beta, gamma, g, g_pre, g_pre_2);
     g_pre_2 = g_pre;
     g_pre = g;
@@ -121,17 +128,20 @@ void WavetableOscillator::setG(float newG)
 
 void WavetableOscillator::setAlpha(float newAlpha)
 {
-    alpha = newAlpha;
+    alpha = newAlpha / 100;
+    DBG("Alpha" + String(alpha));
 }
 
 void WavetableOscillator::setBeta(float newBeta)
 {
-    beta = newBeta;
+    beta = (newBeta / 100);
+    DBG("Beta" + String(beta));
 }
 
 void WavetableOscillator::setGamma(float newGamma)
 {
-    gamma = newGamma;
+    gamma = (newGamma / 100);
+    DBG("Gamma" + String(gamma));
 }
 
 float WavetableOscillator::remap(float source, float alpha, float beta, float gamma)

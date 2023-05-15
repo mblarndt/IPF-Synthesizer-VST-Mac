@@ -21,6 +21,7 @@ public:
     void resetIPF();
     float ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2);
     float calculate_amp();
+    int ipf_counter;
 
     //Control Methods
     void setG(float newG);

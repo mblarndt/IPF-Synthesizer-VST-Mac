@@ -45,21 +45,21 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     slider_volume.setTextBoxStyle(Slider::TextBoxLeft, false, 80, 20);
     slider_volume.setNumDecimalPlacesToDisplay(0);
 
-    dial_init(dial_g, Slider::SliderStyle::Rotary, 1);
-    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 0.5);
+    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 1, 0.001);
+    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50);
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 30));
 
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 0.3);
-    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 0.2);
+    dial_init(dial_beta, Slider::SliderStyle::Rotary, 30);
+    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 20);
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
     dial_rate.setRange(0.25, 4.0, 0.25);
 
 
     setSize(800, 479);
 
-    audioProcessor.alpha = 0.5;
-    audioProcessor.beta = 0.47;
-    audioProcessor.gamma = 0.455;
+    audioProcessor.alpha = 50;
+    audioProcessor.beta = 30;
+    audioProcessor.gamma = 20;
     audioProcessor.volume = 1;
     audioProcessor.ipf_rate = 1;
     
@@ -153,10 +153,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     dial_gamma.setBounds(startpos + margin * 4, 369.5, 90.0, 90.0);
 
 }
-void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue) {
+void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue, int min, int max, float steps) {
     sliders.add(&name);
     name.setSliderStyle(style);
-    name.setRange(0.0, 1.0, 0.001);
+    name.setRange(min, max, steps);
     name.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 15);
     name.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
     name.setValue(initValue);
@@ -222,7 +222,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         if (slider == name)
         {
             float value = slider->getValue();
-            DBG(" changed to " + String(value));
+            //DBG(" changed to " + String(value));
         }
     }
     if (slider == &dial_alpha) {
@@ -233,7 +233,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         
 
         float new_beta_max = value;
-        dial_beta.setRange(0.0, new_beta_max, 0.001);
+        dial_beta.setRange(0.0, new_beta_max, 0.01);
         if (audioProcessor.beta >= new_beta_max)
             audioProcessor.beta = new_beta_max;
 
@@ -245,7 +245,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             new_gamma_max = dial_alpha.getValue() - dial_beta.getValue();
         }
 
-        dial_gamma.setRange(0.0, new_gamma_max, 0.001);
+        dial_gamma.setRange(0.0, new_gamma_max, 0.01);
 
         if (dial_gamma.getValue() >= new_gamma_max)
             audioProcessor.gamma = new_gamma_max;
@@ -267,10 +267,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             new_max = dial_alpha.getValue() - value;
         }
 
-        dial_gamma.setRange(0.0, new_max, 0.001);
+        dial_gamma.setRange(0.0, new_max, 0.01);
 
         if (dial_gamma.getValue() >= new_max)
             audioProcessor.gamma = new_max;
+        
 
         dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
         dial_gamma.repaint();

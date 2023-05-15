@@ -71,7 +71,7 @@ private:
 
     CustomLookAndFeel claf;
 
-    void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue);
+    void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue, int min = 0, int max = 100, float steps = 0.01);
     void button_init(juce::TextButton& name, String& button_text);
     void radioButton_init(juce::TextButton& button, String& button_text, int id);
     void toggle_init(juce::ToggleButton& name);
