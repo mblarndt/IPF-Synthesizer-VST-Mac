@@ -22,12 +22,15 @@ public:
     float ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2);
     float calculate_amp();
     int ipf_counter;
+    bool phaseMod;
 
     //Control Methods
     void setG(float newG);
     void setAlpha(float newAlpha);
     void setBeta(float newBeta);
     void setGamma(float newGamma);
+    
+    void setphaseMod(bool state);
 
 
 
@@ -44,7 +47,7 @@ public:
     float g_degree;
     float g_rad;
     float phaseShift;
-    float periodCounter = 0;
+    float sampleCounter = 0;
     float desiredPeriodCount;
 
     float ipf_rate;
@@ -53,11 +56,12 @@ public:
 
 private:
     float interpolateLinearly() const;
+    float interpolateLinearlyWithPhaseShift(float phaseOffset) const;
     float remap(float source, float alpha, float beta, float gamma);
 
-    float alpha{ 0.5f };
-    float beta{ 0.49f };
-    float gamma{ 0.3f };
+    float alpha = 0.5;
+    float beta = 0.49;
+    float gamma = 0.3f;
     
     float indexIncrement = 0.f;
     std::vector<float> waveTable;

@@ -93,6 +93,8 @@ void IPFSynthesizerVSTAudioProcessor::changeProgramName (int index, const juce::
 //==============================================================================
 void IPFSynthesizerVSTAudioProcessor::prepareToPlay (double sampleRate, int)
 {
+    synth.setValues(1, 50, 45, 5);
+    synth.setVolume(-10);
     synth.prepareToPlay(sampleRate);
 }
 
@@ -136,6 +138,7 @@ void IPFSynthesizerVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     synth.setValues(g, alpha, beta, gamma);
     synth.setVolume(volume);
     synth.ipf_rate = ipf_rate;
+    synth.phaseMod = phaseMod;
 
     if (chosenWavetable != oldWavetable) {
         if (chosenWavetable == "custom")

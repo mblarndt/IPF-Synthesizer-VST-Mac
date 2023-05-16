@@ -141,9 +141,9 @@ void IPFSynth::handleMidiEvent(const juce::MidiMessage& midiMessage)
         oscillators[oscillatorId].resetIPF();
         const auto frequency = midiMessage.getMidiNoteInHertz(oscillatorId);
         oscillators[oscillatorId].setFrequency(frequency);
-        const auto velocity = midiMessage.getVelocity();
-        velocity_mapped = juce::jmap<float>(velocity, 0, 1);
-        oscillators[oscillatorId].setAlpha(velocity_mapped);
+        //const auto velocity = midiMessage.getVelocity();
+        //velocity_mapped = juce::jmap<float>(velocity, 0.3, 0.8);
+        //oscillators[oscillatorId].setAlpha(alpha_val);
         
     }
     else if (midiMessage.isNoteOff())
@@ -170,9 +170,10 @@ void IPFSynth::render(juce::AudioBuffer<float>& buffer, int beginSample, int end
     for (auto& oscillator : oscillators)
     {
         oscillator.setG(g_val);
-        //oscillator.setAlpha(velocity_mapped);
+        oscillator.setAlpha(alpha_val);
         oscillator.setBeta(beta_val);
         oscillator.setGamma(gamma_val);
+        oscillator.setphaseMod(phaseMod);
         setIPFRate(oscillator, ipf_rate);
 
         if (oscillator.isPlaying())

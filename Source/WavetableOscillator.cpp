@@ -13,25 +13,57 @@ float WavetableOscillator::getSample()
 {
     jassert(isPlaying());
     const auto wavetableSize = static_cast<float>(waveTable.size());
-    index = index + (waveTable.size() * 0);
+
+    // Original-Sample generieren
+    index = index + (waveTable.size());
     index = std::fmod(index, wavetableSize);
-    
-    auto sample = interpolateLinearly();
+    auto originalSample = interpolateLinearly();
     index += indexIncrement;
 
-
-    ++periodCounter;
+    ++sampleCounter;
     //desiredPeriodCount = desiredPeriodCount * 0.5;
-    if (periodCounter >= (desiredPeriodCount * ipf_rate))
+    if (sampleCounter >= (desiredPeriodCount * ipf_rate))
     {
         calculate_amp();
-        periodCounter = 0;
+        sampleCounter = 0;
+        
     }
-
+    
+    auto sample = originalSample;
+    
+    if(phaseMod == true) {
+        // Phasenverschobenes Sample generieren
+        auto phaseShiftedSample = interpolateLinearlyWithPhaseShift(phaseShift);
+        // Kombinierte Samples
+        sample = originalSample + phaseShiftedSample;
+    }
+    
     sample *= amplitude;
 
     return sample;
 }
+
+float WavetableOscillator::interpolateLinearly() const
+{
+    const auto truncatedIndex = static_cast<size_t>(index);
+    const auto nextIndex = static_cast<size_t>(std::ceil(index)) % waveTable.size();
+    const auto nextIndexWeight = index - static_cast<float>(truncatedIndex);
+    return waveTable[nextIndex] * nextIndexWeight +
+        (1.f - nextIndexWeight) * waveTable[truncatedIndex];
+}
+
+float WavetableOscillator::interpolateLinearlyWithPhaseShift(float phaseOffset) const
+{
+    const auto phaseShiftedIndex = std::fmod(index + (waveTable.size() * phaseOffset), waveTable.size());
+    const auto truncatedIndex = static_cast<size_t>(phaseShiftedIndex);
+    const auto nextIndex = static_cast<size_t>(std::ceil(phaseShiftedIndex)) % waveTable.size();
+    const auto nextIndexWeight = phaseShiftedIndex - static_cast<float>(truncatedIndex);
+    return waveTable[nextIndex] * nextIndexWeight +
+        (1.f - nextIndexWeight) * waveTable[truncatedIndex];
+}
+
+
+
 
 void WavetableOscillator::setPhaseShift(float shift)
 {
@@ -62,6 +94,11 @@ void WavetableOscillator::setAmplitude(float amp)
     amplitude = amp;
 }
 
+void WavetableOscillator::setphaseMod(bool state)
+{
+    phaseMod = state;
+}
+
 void WavetableOscillator::resetIPF()
 {
     g = g_init;
@@ -71,15 +108,6 @@ void WavetableOscillator::resetIPF()
     g_delta = 0;
     amplitude = 0;
     ipf_counter = 0;
-}
-
-float WavetableOscillator::interpolateLinearly() const
-{
-    const auto truncatedIndex = static_cast<size_t>(index);
-    const auto nextIndex = static_cast<size_t>(std::ceil(index)) % waveTable.size();
-    const auto nextIndexWeight = index - static_cast<float>(truncatedIndex);
-    return waveTable[nextIndex] * nextIndexWeight +
-        (1.f - nextIndexWeight) * waveTable[truncatedIndex];
 }
 
 float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2)
@@ -109,11 +137,10 @@ float WavetableOscillator::calculate_amp()
     g_delta = abs(g - g_pre);
     g_delta = remap(g_delta, alpha, beta, gamma);
 
-    setPhaseShift(abs(g_delta));
-
-
+    setPhaseShift(g_delta);
+    
     const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
-
+    //const float g_plus_fmod = juce::jmap<float>(g_plus_mapped, 0, 360);
     
     
     amplitude = std::abs(g_plus_mapped);
@@ -129,31 +156,32 @@ void WavetableOscillator::setG(float newG)
 void WavetableOscillator::setAlpha(float newAlpha)
 {
     alpha = newAlpha / 100;
-    DBG("Alpha" + String(alpha));
+    //DBG("Alpha" + String(alpha));
 }
 
 void WavetableOscillator::setBeta(float newBeta)
 {
     beta = (newBeta / 100);
-    DBG("Beta" + String(beta));
+    //DBG("Beta" + String(beta));
 }
 
 void WavetableOscillator::setGamma(float newGamma)
 {
     gamma = (newGamma / 100);
-    DBG("Gamma" + String(gamma));
+    //DBG("Gamma" + String(gamma));
 }
 
 float WavetableOscillator::remap(float source, float alpha, float beta, float gamma)
 {
-    const float g_init = 1.f;
     const float gs = alpha + beta + gamma;
     const float gdiff = g_init - gs;
-    const float g_min = gs - gdiff - 0;
-    const float g_max = g_init + 0;
+    float g_min = gs - gdiff;
+    float g_max = g_init;
     const float min_new = -1.0f;
     const float max_new = 1.0f;
 
+    if(g_min == g_max)
+        g_min = g_max - 0.001;
     const float out = juce::jmap<float>(source, g_min, g_max, min_new, max_new);
 
     return out;

@@ -68,6 +68,8 @@ public:
     float ipf_rate;
     float volume;
     float velocity_mapped;
+    
+    bool phaseMod;
 
     juce::String chosenWavetable;
     juce::String oldWavetable;

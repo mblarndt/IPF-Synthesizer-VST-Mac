@@ -39,7 +39,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     String fileText = String("Select File");
     button_init(button_file, fileText);
 
-    dial_init(slider_volume, Slider::SliderStyle::LinearBar, 0);
+    dial_init(slider_volume, Slider::SliderStyle::LinearBar, -10);
     slider_volume.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
     slider_volume.setRange(-100.0f, 20.0f);
     slider_volume.setTextBoxStyle(Slider::TextBoxLeft, false, 80, 20);
@@ -47,10 +47,11 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
 
     dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 1, 0.001);
     dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50);
-    dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 30));
+    dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
 
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 30);
-    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 20);
+    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43);
+    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 23);
+
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
     dial_rate.setRange(0.25, 4.0, 0.25);
 
@@ -58,9 +59,9 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     setSize(800, 479);
 
     audioProcessor.alpha = 50;
-    audioProcessor.beta = 30;
-    audioProcessor.gamma = 20;
-    audioProcessor.volume = 1;
+    audioProcessor.beta = 43;
+    audioProcessor.gamma = 5;
+    audioProcessor.volume = -10;
     audioProcessor.ipf_rate = 1;
     
 
@@ -117,7 +118,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
-    paint_text(g, font, 18, text_colour, String("G-Delta"), 30, 267 + 18, false);
+    paint_text(g, font, 18, text_colour, String("Phase-Mod"), 30, 267 + 18, false);
     paint_text(g, font, 18, text_colour, String("f-Mod"), 30, 302 + 18, false);
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer"), 40.0, 15+ 18, false);
     
@@ -216,6 +217,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_shadow(juce::Graphics& graphic
 
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
+    /*
     for (auto* name : sliders)
     {
         // Handle slider changes here
@@ -225,6 +227,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             //DBG(" changed to " + String(value));
         }
     }
+    */
     if (slider == &dial_alpha) {
         float value = slider->getValue();
         if(value == 0)
@@ -307,12 +310,16 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
             float value = button->getToggleState();
             DBG(btn + " changed to " + String(value));
         }
-        if (button == &button_file) {
+        else if (button == &button_file) {
             openFileAsync();
             for (auto* b : radioButtons) {
                 b->setToggleState(true, NotificationType::dontSendNotification);
             }
                 
+        }
+        else if (button == &toggle_gdelta) {
+            bool value = button->getToggleState();
+            audioProcessor.phaseMod = value;
         }
     }
 

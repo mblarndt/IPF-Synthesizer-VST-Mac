@@ -15,6 +15,7 @@ public:
 
     float volume;
     float ipf_rate;
+    bool phaseMod;
 
     float g_val;
     float alpha_val;
