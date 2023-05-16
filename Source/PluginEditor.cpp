@@ -61,7 +61,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     audioProcessor.alpha = 50;
     audioProcessor.beta = 43;
     audioProcessor.gamma = 5;
-    audioProcessor.volume = -10;
+    audioProcessor.volume = 1;
     audioProcessor.ipf_rate = 1;
     
 
@@ -217,74 +217,86 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_shadow(juce::Graphics& graphic
 
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
-    /*
-    for (auto* name : sliders)
-    {
-        // Handle slider changes here
-        if (slider == name)
-        {
-            float value = slider->getValue();
-            //DBG(" changed to " + String(value));
-        }
-    }
-    */
     if (slider == &dial_alpha) {
         float value = slider->getValue();
-        if(value == 0)
-            value = 0.00001;
+        if (value <= 0.0f)
+            value = 0.00001f;
+
+        // Regel: beta < alpha
+        if (value <= audioProcessor.beta)
+            value = audioProcessor.beta + 0.00001f;
+
         audioProcessor.alpha = value;
-        
 
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
+
+        // Regel: beta <= new_beta_max
         if (audioProcessor.beta >= new_beta_max)
             audioProcessor.beta = new_beta_max;
 
         dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
 
-
         float new_gamma_max = dial_beta.getValue();
-        if (new_gamma_max >= (value - dial_beta.getValue())) {
+
+        // Regel: beta + gamma <= alpha
+        if (new_gamma_max >= (value - dial_beta.getValue()))
             new_gamma_max = dial_alpha.getValue() - dial_beta.getValue();
-        }
+            if (new_gamma_max <= 0.0f)
+                new_gamma_max = 0.00001f;
 
         dial_gamma.setRange(0.0, new_gamma_max, 0.01);
 
+        // Regel: gamma <= new_gamma_max
         if (dial_gamma.getValue() >= new_gamma_max)
             audioProcessor.gamma = new_gamma_max;
 
         dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
+
         dial_beta.repaint();
         dial_gamma.repaint();
-
     }
+
     else if (slider == &dial_beta) {
         float value = slider->getValue();
-        if(value == 0)
-            value = 0.00001;
+        if (value <= 0.0f)
+            value = 0.00001f;
+
+        // Regel: alpha > beta
+        if (value >= audioProcessor.alpha)
+            value = audioProcessor.alpha - 0.00001f;
+
         audioProcessor.beta = value;
 
         float new_max = value;
 
-        if (new_max > (dial_alpha.getValue() - value)) {
+        // Regel: gamma <= alpha - beta
+        if (new_max > (dial_alpha.getValue() - value))
             new_max = dial_alpha.getValue() - value;
-        }
+
+        if (new_max <= 0.0f)
+            new_max = 0.0f;
 
         dial_gamma.setRange(0.0, new_max, 0.01);
 
+        // Regel: gamma <= new_max
         if (dial_gamma.getValue() >= new_max)
             audioProcessor.gamma = new_max;
-        
 
         dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
+
         dial_gamma.repaint();
     }
     else if (slider == &dial_gamma) {
         float value = slider->getValue();
-        if(value == 0)
-            value = 0.00001;
+        if (value <= 0.0f)
+            value = 0.00001f;
+
+        // Regel: beta > gamma
+        if (value >= audioProcessor.beta)
+            value = audioProcessor.beta - 0.00001f;
+
         audioProcessor.gamma = value;
-        
     }
     else if (slider == &dial_g) {
         audioProcessor.g = slider->getValue();
@@ -296,8 +308,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     else if (slider == &dial_rate) {
         audioProcessor.ipf_rate = slider->getValue();
     }
-
 }
+
 
 void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* button)
 {

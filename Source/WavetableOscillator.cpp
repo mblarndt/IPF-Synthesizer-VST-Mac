@@ -67,7 +67,12 @@ float WavetableOscillator::interpolateLinearlyWithPhaseShift(float phaseOffset) 
 
 void WavetableOscillator::setPhaseShift(float shift)
 {
-    phaseShift = shift;
+    //Nimmt Werte von -1 bis 1
+    if (shift <= 0)
+        phaseShift = 1 - abs(shift);
+    else
+        phaseShift = shift;
+    DBG(phaseShift);
 }
 
 
@@ -135,8 +140,8 @@ float WavetableOscillator::calculate_amp()
     g = g_plus;
 
     g_delta = abs(g - g_pre);
-    g_delta = remap(g_delta, alpha, beta, gamma);
-
+    g_delta = remap(g_delta , alpha, beta, gamma);
+    //DBG(g_delta);
     setPhaseShift(g_delta);
     
     const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
