@@ -137,14 +137,16 @@ float WavetableOscillator::calculate_amp()
     g_plus = ipf(alpha, beta, gamma, g, g_pre, g_pre_2);
     g_pre_2 = g_pre;
     g_pre = g;
+    
+    const float g_mapped = remap(g, alpha, beta, gamma);
     g = g_plus;
-
-    g_delta = abs(g - g_pre);
-    g_delta = remap(g_delta , alpha, beta, gamma);
-    //DBG(g_delta);
-    setPhaseShift(g_delta);
     
     const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
+    
+    g_delta = g_plus_mapped - g_mapped;
+    //g_delta = remap(g_delta , alpha, beta, gamma);
+    DBG(g_delta);
+    setPhaseShift(g_delta / 2);
     //const float g_plus_fmod = juce::jmap<float>(g_plus_mapped, 0, 360);
     
     
