@@ -11,18 +11,55 @@
 
 //==============================================================================
 IPFSynthesizerVSTAudioProcessor::IPFSynthesizerVSTAudioProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+    : AudioProcessor (BusesProperties()
+                      #if ! JucePlugin_IsMidiEffect
+                       #if ! JucePlugin_IsSynth
+                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                       #endif
+                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-#endif
+                      ),
+    apvts(*this, nullptr)
 {
+    // Erstelle und füge Parameter hinzu
+    auto alphaParameter = std::make_unique<juce::AudioParameterFloat>(
+        ParameterID("alpha", 1),
+        "Input Strength",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f),
+        50.0f
+    );
+    apvts.createAndAddParameter(std::move(alphaParameter));
+    
+    auto betaParameter = std::make_unique<juce::AudioParameterFloat>(
+        ParameterID("beta", 1),
+        "1. Reflection",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f),
+        45.0f
+    );
+    apvts.createAndAddParameter(std::move(betaParameter));
+    
+    auto gammaParameter = std::make_unique<juce::AudioParameterFloat>(
+        ParameterID("gamma", 1),
+        "2. Reflection",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f),
+        4.0f
+    );
+    apvts.createAndAddParameter(std::move(gammaParameter));
+    
+    auto gainParameter = std::make_unique<juce::AudioParameterFloat>(
+        ParameterID("gain", 1),
+        "2. Reflection",
+        juce::NormalisableRange<float>(-100.0f, 20.0f, 0.1f),
+        -10.0f
+    );
+    apvts.createAndAddParameter(std::move(gainParameter));
+    
+    juce::ValueTree defaultState("MyPluginState");  // Erstelle eine ValueTree-Instanz
+    apvts.state = defaultState;  // Weise die ValueTree-Instanz dem apvts-Objekt zu
 }
+
+
+
 
 IPFSynthesizerVSTAudioProcessor::~IPFSynthesizerVSTAudioProcessor()
 {
@@ -93,6 +130,7 @@ void IPFSynthesizerVSTAudioProcessor::changeProgramName (int index, const juce::
 //==============================================================================
 void IPFSynthesizerVSTAudioProcessor::prepareToPlay (double sampleRate, int)
 {
+    
     synth.setValues(1, 50, 45, 5);
     synth.setVolume(-10);
     synth.prepareToPlay(sampleRate);
