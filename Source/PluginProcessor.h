@@ -78,6 +78,8 @@ public:
     std::vector<float> customWavetable;
     juce::AudioProcessorValueTreeState apvts;
 
+    void addSliderParameter(String id, String name, NormalisableRange<float> range, float initialValue);
+
 private:
     
     //==============================================================================

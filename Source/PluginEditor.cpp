@@ -55,18 +55,16 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_init(dial_gamma, Slider::SliderStyle::Rotary, 23);
 
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
-    dial_rate.setRange(0.25, 4.0, 0.25);
     
-    
+    gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
     alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
     betaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "beta", dial_beta);
     gammaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gamma", dial_gamma);
-    gammaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gain", slider_gain);
+    gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gain", slider_gain);
+    rateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "rate", dial_rate);
     
     
     setSize(800, 479);
-
-    audioProcessor.ipf_rate = 1;
     
     setLookAndFeel(&claf);
 }
@@ -112,12 +110,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     String font = String("Arial");
     Colour text_colour = Colour::fromRGB(255, 255, 255);
     
-    paint_text(g, font, 18, text_colour, String("Rate"), dial_rate.getX() + (dial_rate.getWidth() / 2), dial_rate.getY());
-    paint_text(g, font, 18, text_colour, String("g"), dial_g.getX() + (dial_g.getWidth() / 2), dial_g.getY());
-    paint_text(g, font, 18, text_colour, String("Input Strength"), dial_alpha.getX() + (dial_alpha.getWidth() / 2), dial_alpha.getY());
-    paint_text(g, font, 18, text_colour, String("1. Reflection"), dial_beta.getX() + (dial_beta.getWidth() / 2), dial_beta.getY());
-    paint_text(g, font, 18, text_colour, String("2. Reflection"), dial_gamma.getX() + (dial_gamma.getWidth() / 2), dial_gamma.getY());
-    paint_text(g, font, 18, text_colour, String("Volume"), 745.5, 440);
+    paint_label(g,dial_g, "State");
+    paint_label(g,dial_rate, "Rate");
+    paint_label(g,dial_alpha, "Input Strength");
+    paint_label(g,dial_beta, "1. Reflection");
+    paint_label(g,dial_gamma, "2. Reflection");
+    paint_text(g, font, 18, text_colour, String("Gain"), 745.5, 440);
     
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
@@ -218,25 +216,32 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_shadow(juce::Graphics& graphic
     shadow.drawForRectangle(graphics, bounds);
 }
 
+void IPFSynthesizerVSTAudioProcessorEditor::paint_label(juce::Graphics& graphics, Slider& name, String title)
+{
+    String font = String("Arial");
+    Colour text_colour = Colour::fromRGB(255, 255, 255);
+
+    paint_text(graphics, font, 18, text_colour, title, name.getX() + (name.getWidth() / 2), name.getY());
+}
+
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &dial_alpha) {
+    if (slider == &dial_alpha)
+    {
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
-
-        // Regel: beta < alpha
-        if (value <= audioProcessor.beta)
-            value = audioProcessor.beta + 0.00001f;
 
         audioProcessor.alpha = value;
 
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
 
-        // Regel: beta <= new_beta_max
+        // Regel: alpha > beta
         if (audioProcessor.beta >= new_beta_max)
             audioProcessor.beta = new_beta_max;
+
+        
 
         dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
 
@@ -244,9 +249,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         // Regel: beta + gamma <= alpha
         if (new_gamma_max >= (value - dial_beta.getValue()))
-            new_gamma_max = dial_alpha.getValue() - dial_beta.getValue();
-            if (new_gamma_max <= 0.0f)
-                new_gamma_max = 0.00001f;
+            new_gamma_max = value - dial_beta.getValue();
+        if (new_gamma_max <= 0.0f)
+            new_gamma_max = 0.00001f;
 
         dial_gamma.setRange(0.0, new_gamma_max, 0.01);
 
@@ -260,13 +265,14 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         dial_gamma.repaint();
     }
 
+
     else if (slider == &dial_beta) {
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
 
         // Regel: alpha > beta
-        if (value >= audioProcessor.alpha)
+        if (value >= dial_alpha.getValue())
             value = audioProcessor.alpha - 0.00001f;
 
         audioProcessor.beta = value;
