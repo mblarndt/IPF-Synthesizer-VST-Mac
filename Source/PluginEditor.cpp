@@ -19,6 +19,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+    // Erstelle den AudioProcessorValueTreeState-Objekt
 
     toggle_init(toggle_bypass);
     toggle_bypass.setToggleState(true, NotificationType::sendNotification);
@@ -38,14 +39,15 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     
     String fileText = String("Select File");
     button_init(button_file, fileText);
+    
+    //Gain Slider Setup
+    dial_init(slider_gain, Slider::SliderStyle::LinearBarVertical, 0);
+    resetRange(slider_gain, "gain");
+    slider_gain.setTextBoxStyle(Slider::TextBoxLeft, false, 80, 20);
+    slider_gain.setNumDecimalPlacesToDisplay(0);
 
-    dial_init(slider_volume, Slider::SliderStyle::LinearBar, -10);
-    slider_volume.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-    slider_volume.setRange(-100.0f, 20.0f);
-    slider_volume.setTextBoxStyle(Slider::TextBoxLeft, false, 80, 20);
-    slider_volume.setNumDecimalPlacesToDisplay(0);
-
-    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 1, 0.001);
+    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 1, 0.01);
+    
     dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50);
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
 
@@ -53,18 +55,17 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_init(dial_gamma, Slider::SliderStyle::Rotary, 23);
 
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
-    dial_rate.setRange(0.25, 4.0, 0.25);
-
-
-    setSize(800, 479);
-
-    audioProcessor.alpha = 50;
-    audioProcessor.beta = 43;
-    audioProcessor.gamma = 5;
-    audioProcessor.volume = 1;
-    audioProcessor.ipf_rate = 1;
     
-
+    gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
+    alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
+    betaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "beta", dial_beta);
+    gammaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gamma", dial_gamma);
+    gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gain", slider_gain);
+    rateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "rate", dial_rate);
+    
+    
+    setSize(800, 479);
+    
     setLookAndFeel(&claf);
 }
 
@@ -109,12 +110,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     String font = String("Arial");
     Colour text_colour = Colour::fromRGB(255, 255, 255);
     
-    paint_text(g, font, 18, text_colour, String("Rate"), dial_rate.getX() + (dial_rate.getWidth() / 2), dial_rate.getY());
-    paint_text(g, font, 18, text_colour, String("g"), dial_g.getX() + (dial_g.getWidth() / 2), dial_g.getY());
-    paint_text(g, font, 18, text_colour, String("Input Strength"), dial_alpha.getX() + (dial_alpha.getWidth() / 2), dial_alpha.getY());
-    paint_text(g, font, 18, text_colour, String("1. Reflection"), dial_beta.getX() + (dial_beta.getWidth() / 2), dial_beta.getY());
-    paint_text(g, font, 18, text_colour, String("2. Reflection"), dial_gamma.getX() + (dial_gamma.getWidth() / 2), dial_gamma.getY());
-    paint_text(g, font, 18, text_colour, String("Volume"), 745.5, 440);
+    paint_label(g,dial_g, "State");
+    paint_label(g,dial_rate, "Rate");
+    paint_label(g,dial_alpha, "Input Strength");
+    paint_label(g,dial_beta, "1. Reflection");
+    paint_label(g,dial_gamma, "2. Reflection");
+    paint_text(g, font, 18, text_colour, String("Gain"), 745.5, 440);
     
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
@@ -144,7 +145,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     radioButton_13_triangle.setBounds(92.21, 114, 79.04, 27.54);
     radioButton_13_saw.setBounds(14.37, 114, 79.04, 27.54);
     
-    slider_volume.setBounds(729, 92.21, 37.12, 306.56);
+    slider_gain.setBounds(729, 92.21, 37.12, 306.56);
     
     int startpos = 25;
     dial_rate.setBounds(startpos, 369.5, 90.0, 90.0);
@@ -154,7 +155,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     dial_gamma.setBounds(startpos + margin * 4, 369.5, 90.0, 90.0);
 
 }
-void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue, int min, int max, float steps) {
+void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue,int min, int max, float steps) {
     sliders.add(&name);
     name.setSliderStyle(style);
     name.setRange(min, max, steps);
@@ -215,25 +216,32 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_shadow(juce::Graphics& graphic
     shadow.drawForRectangle(graphics, bounds);
 }
 
+void IPFSynthesizerVSTAudioProcessorEditor::paint_label(juce::Graphics& graphics, Slider& name, String title)
+{
+    String font = String("Arial");
+    Colour text_colour = Colour::fromRGB(255, 255, 255);
+
+    paint_text(graphics, font, 18, text_colour, title, name.getX() + (name.getWidth() / 2), name.getY());
+}
+
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &dial_alpha) {
+    if (slider == &dial_alpha)
+    {
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
-
-        // Regel: beta < alpha
-        if (value <= audioProcessor.beta)
-            value = audioProcessor.beta + 0.00001f;
 
         audioProcessor.alpha = value;
 
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
 
-        // Regel: beta <= new_beta_max
+        // Regel: alpha > beta
         if (audioProcessor.beta >= new_beta_max)
             audioProcessor.beta = new_beta_max;
+
+        
 
         dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
 
@@ -241,9 +249,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         // Regel: beta + gamma <= alpha
         if (new_gamma_max >= (value - dial_beta.getValue()))
-            new_gamma_max = dial_alpha.getValue() - dial_beta.getValue();
-            if (new_gamma_max <= 0.0f)
-                new_gamma_max = 0.00001f;
+            new_gamma_max = value - dial_beta.getValue();
+        if (new_gamma_max <= 0.0f)
+            new_gamma_max = 0.00001f;
 
         dial_gamma.setRange(0.0, new_gamma_max, 0.01);
 
@@ -257,13 +265,14 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         dial_gamma.repaint();
     }
 
+
     else if (slider == &dial_beta) {
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
 
         // Regel: alpha > beta
-        if (value >= audioProcessor.alpha)
+        if (value >= dial_alpha.getValue())
             value = audioProcessor.alpha - 0.00001f;
 
         audioProcessor.beta = value;
@@ -275,7 +284,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             new_max = dial_alpha.getValue() - value;
 
         if (new_max <= 0.0f)
-            new_max = 0.0f;
+            new_max = 0.00001f;
 
         dial_gamma.setRange(0.0, new_max, 0.01);
 
@@ -301,7 +310,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     else if (slider == &dial_g) {
         audioProcessor.g = slider->getValue();
     }
-    else if (slider == &slider_volume) {
+    else if (slider == &slider_gain) {
         float volume = std::pow(10.0f, slider->getValue() / 20.0f);
         audioProcessor.volume = volume;
     }
@@ -422,4 +431,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::openFileAsync()
 
 void IPFSynthesizerVSTAudioProcessorEditor::adjustSliders()
 {
+}
+
+void IPFSynthesizerVSTAudioProcessorEditor::resetRange(juce::Slider &name, String ctrlID) {
+    juce::NormalisableRange<float> parameterRange = audioProcessor.apvts.getParameterRange(ctrlID);
+    name.setRange(parameterRange.start, parameterRange.end, parameterRange.interval);
 }

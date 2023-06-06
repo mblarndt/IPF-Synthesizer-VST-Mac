@@ -11,18 +11,30 @@
 
 //==============================================================================
 IPFSynthesizerVSTAudioProcessor::IPFSynthesizerVSTAudioProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+    : AudioProcessor (BusesProperties()
+                      #if ! JucePlugin_IsMidiEffect
+                       #if ! JucePlugin_IsSynth
+                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                       #endif
+                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-#endif
+                      ),
+    apvts(*this, nullptr)
 {
+    // Erstelle und füge Parameter hinzu
+    addSliderParameter("g", "State", NormalisableRange<float>(0.0f, 1.0f, 0.001f), 100.0f);
+    addSliderParameter("alpha", "Input Strength", NormalisableRange<float>(0.0f, 100.0f, 0.01f), 50.0f);
+    addSliderParameter("beta", "1. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.01f), 45.0f);
+    addSliderParameter("gamma", "2. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.01f), 4.0f);
+    addSliderParameter("gain", "Gain", NormalisableRange<float>(-100.0f, 20.0f, 0.1f), -10.0f);
+    addSliderParameter("rate", "Rate", NormalisableRange<float>(0, 4, 0.25f), 1.0f);
+    
+    juce::ValueTree defaultState("MyPluginState");  // Erstelle eine ValueTree-Instanz
+    apvts.state = defaultState;  // Weise die ValueTree-Instanz dem apvts-Objekt zu
 }
+
+
+
 
 IPFSynthesizerVSTAudioProcessor::~IPFSynthesizerVSTAudioProcessor()
 {
@@ -93,6 +105,7 @@ void IPFSynthesizerVSTAudioProcessor::changeProgramName (int index, const juce::
 //==============================================================================
 void IPFSynthesizerVSTAudioProcessor::prepareToPlay (double sampleRate, int)
 {
+    
     synth.setValues(1, 50, 45, 5);
     synth.setVolume(-10);
     synth.prepareToPlay(sampleRate);
@@ -191,4 +204,15 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 std::vector<float> IPFSynthesizerVSTAudioProcessor::getWavetable() {
     return synth.currentWavetable;
+}
+
+void IPFSynthesizerVSTAudioProcessor::addSliderParameter(String id, String name, NormalisableRange<float> range, float initialValue)
+{
+    auto parameter = std::make_unique<juce::AudioParameterFloat>(
+        ParameterID(id, 1),
+        name,
+        range,
+        initialValue
+    );
+    apvts.createAndAddParameter(std::move(parameter));
 }

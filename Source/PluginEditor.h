@@ -43,7 +43,7 @@ private:
     TextButton radioButton_13_square;
     TextButton radioButton_13_triangle;
     TextButton radioButton_13_saw;
-    Slider slider_volume;
+    Slider slider_gain;
     Slider slider_gdelta;
     Slider slider_fmod;
     Slider slider_exp;
@@ -51,10 +51,15 @@ private:
     Slider dial_rate;
 
     Slider dial_alpha;
-
     Slider dial_beta;
-
     Slider dial_gamma;
+    
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> alphaAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> betaAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gammaAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> rateAttachment;
     
     Path waveTablePath;
 
@@ -71,7 +76,7 @@ private:
 
     CustomLookAndFeel claf;
 
-    void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue, int min = 0, int max = 100, float steps = 0.01);
+    void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue ,int min = 0, int max = 100, float steps = 0.01);
     void button_init(juce::TextButton& name, String& button_text);
     void radioButton_init(juce::TextButton& button, String& button_text, int id);
     void toggle_init(juce::ToggleButton& name);
@@ -79,11 +84,13 @@ private:
     void paint_text(juce::Graphics& graphics, const juce::String& font, float size, Colour colour, const juce::String& text, int x, int y, bool centred = true);
     void paint_shape(juce::Graphics& graphics, Rectangle<int> bounds, Colour colour, bool dropShadow = true);
     void paint_shadow(juce::Graphics& graphics, Rectangle<int> bounds, Colour colour = Colour::fromRGBA(0, 0, 0, 100), int radius = 10, Point<int> offset = Point<int>(3, 3));
+    void paint_label(juce::Graphics& graphics, Slider& name, String title);
     void sliderValueChanged(juce::Slider* slider);
     void buttonValueChanged(juce::Button* button);
     void openFileAsync();
     void adjustSliders();
     void updateWaveTablePath();
+    void resetRange(juce::Slider& name, String ctrlID);
 
 
 

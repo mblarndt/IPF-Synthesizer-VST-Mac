@@ -23,8 +23,9 @@ public:
     //==============================================================================
     IPFSynthesizerVSTAudioProcessor();
     ~IPFSynthesizerVSTAudioProcessor() override;
-
+    
     //==============================================================================
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
@@ -75,10 +76,14 @@ public:
     juce::String oldWavetable;
 
     std::vector<float> customWavetable;
+    juce::AudioProcessorValueTreeState apvts;
+
+    void addSliderParameter(String id, String name, NormalisableRange<float> range, float initialValue);
 
 private:
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IPFSynthesizerVSTAudioProcessor)
     IPFSynth synth;
+    
 };

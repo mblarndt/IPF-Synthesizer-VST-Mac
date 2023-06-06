@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="tkZzDs" name="IPF-Synthesizer-Mac" projectType="audioplug"
-              useAppConfig="0" addUsingNamespaceToJuceHeader="1" displaySplashScreen="1"
-              jucerFormatVersion="1" companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
-  <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer-Mac">
+<JUCERPROJECT id="tkZzDs" name="IPF-Synthesizer" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
+              companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
+  <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
