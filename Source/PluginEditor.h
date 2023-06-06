@@ -43,6 +43,7 @@ private:
     TextButton radioButton_13_square;
     TextButton radioButton_13_triangle;
     TextButton radioButton_13_saw;
+    Slider slider_input;
     Slider slider_gain;
     Slider slider_gdelta;
     Slider slider_fmod;

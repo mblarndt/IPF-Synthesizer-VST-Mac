@@ -55,6 +55,12 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_init(dial_gamma, Slider::SliderStyle::Rotary, 23);
 
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
+
+    slider_input.setSliderStyle(juce::Slider::SliderStyle::TwoValueHorizontal); // Zwei Werte, horizontale Ausrichtung
+    slider_input.setRange(0.0, 100.0, 1.0); // Minimaler Wert, Maximaler Wert, Schrittgröße
+    slider_input.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
+    //slider_input.setValue(2; // Anfangswerte für den minimalen und maximalen Wert
+    addAndMakeVisible(&slider_input);
     
     gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
     alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
@@ -153,6 +159,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     dial_alpha.setBounds(startpos + margin * 2, 369.5, 90.0, 90.0);
     dial_beta.setBounds(startpos + margin * 3, 369.5, 90.0, 90.0);
     dial_gamma.setBounds(startpos + margin * 4, 369.5, 90.0, 90.0);
+    slider_input.setBounds(215, 184, 250, 20);
 
 }
 void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue,int min, int max, float steps) {
