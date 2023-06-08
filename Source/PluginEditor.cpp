@@ -9,6 +9,7 @@
 #include "PluginEditor.h"
 
 
+
 using namespace juce;
 
 
@@ -20,6 +21,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     // Erstelle den AudioProcessorValueTreeState-Objekt
+    
 
     toggle_init(toggle_bypass);
     toggle_bypass.setToggleState(true, NotificationType::sendNotification);
@@ -60,7 +62,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     slider_input.setRange(0.0, 100.0, 1.0); // Minimaler Wert, Maximaler Wert, Schrittgröße
     slider_input.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
     //slider_input.setValue(2; // Anfangswerte für den minimalen und maximalen Wert
-    addAndMakeVisible(&slider_input);
+    //addAndMakeVisible(&slider_input);
     
     gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
     alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
@@ -68,7 +70,21 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     gammaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gamma", dial_gamma);
     gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gain", slider_gain);
     rateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "rate", dial_rate);
+
+    addAndMakeVisible(plot);
+
+    //plot.xLim(0, 500);
     
+
+    yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100);
+    plot.plot(yData);
+
+    plot.yLim(-1.2, 1.2);
+    plot.xLim(0, 100);
+    //plot.gridON();
+    //plot.setXTickLabels
+      
+    //plot.setYTickLabels({ "" });
     
     setSize(800, 479);
     
@@ -128,6 +144,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_text(g, font, 18, text_colour, String("Phase-Mod"), 30, 267 + 18, false);
     paint_text(g, font, 18, text_colour, String("f-Mod"), 30, 302 + 18, false);
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer"), 40.0, 15+ 18, false);
+
     
     //setAlpha(audioProcessor.velocity_mapped);
 
@@ -160,6 +177,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     dial_beta.setBounds(startpos + margin * 3, 369.5, 90.0, 90.0);
     dial_gamma.setBounds(startpos + margin * 4, 369.5, 90.0, 90.0);
     slider_input.setBounds(215, 184, 250, 20);
+
+    plot.setBounds(185, 62, 500, 270);
+
+    
 
 }
 void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue,int min, int max, float steps) {
@@ -233,8 +254,13 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_label(juce::Graphics& graphics
 
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
+
+
     if (slider == &dial_alpha)
     {
+        yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100);
+        plot.plot(yData);
+
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
@@ -256,7 +282,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         // Regel: beta + gamma <= alpha
         if (new_gamma_max >= (value - dial_beta.getValue()))
-            new_gamma_max = value - dial_beta.getValue();
+            new_gamma_max = value - dial_beta.getValue() - 0.001;
         if (new_gamma_max <= 0.0f)
             new_gamma_max = 0.00001f;
 
@@ -274,6 +300,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
 
     else if (slider == &dial_beta) {
+
+        yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100);
+
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
@@ -297,20 +326,24 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         // Regel: gamma <= new_max
         if (dial_gamma.getValue() >= new_max)
-            audioProcessor.gamma = new_max;
+            audioProcessor.gamma = new_max - 0.001;
 
         dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
 
         dial_gamma.repaint();
     }
     else if (slider == &dial_gamma) {
+
+        yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100);
+        plot.plot(yData);
+
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
 
         // Regel: beta > gamma
         if (value >= audioProcessor.beta)
-            value = audioProcessor.beta - 0.00001f;
+            value = audioProcessor.beta - 0.001f;
 
         audioProcessor.gamma = value;
     }
@@ -324,6 +357,20 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     else if (slider == &dial_rate) {
         audioProcessor.ipf_rate = slider->getValue();
     }
+
+
+    std::vector<float> yArray = yData[0];
+    // Überprüfen, ob yData gültig ist
+    bool isValidYData = std::all_of(yArray.begin(), yArray.end(), [](float value) {
+        return std::isfinite(value);  // Überprüft, ob der Wert endlich und kein NaN oder Inf ist
+        });
+
+    if (!isValidYData) {
+        // yData ist ungültig, erstelle ein Array mit Nullen
+        yData[0] = std::vector<float>(50, 0.0f);
+    }
+
+    plot.plot(yData);
 }
 
 
@@ -334,9 +381,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         // Handle slider changes here
         if (button == name)
         {
-            String btn = button->getButtonText();
-            float value = button->getToggleState();
-            DBG(btn + " changed to " + String(value));
+            //String btn = button->getButtonText();
+            //float value = button->getToggleState();
+            //DBG(btn + " changed to " + String(value));
+
         }
         else if (button == &button_file) {
             openFileAsync();
@@ -443,4 +491,59 @@ void IPFSynthesizerVSTAudioProcessorEditor::adjustSliders()
 void IPFSynthesizerVSTAudioProcessorEditor::resetRange(juce::Slider &name, String ctrlID) {
     juce::NormalisableRange<float> parameterRange = audioProcessor.apvts.getParameterRange(ctrlID);
     name.setRange(parameterRange.start, parameterRange.end, parameterRange.interval);
+}
+
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::arange(float start, float stop, float step)
+{
+    std::vector<float> result;
+
+    for (float value = start; value < stop; value += step) {
+        result.push_back(value);
+    }
+
+    return result;
+}
+
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal)
+{
+    float state = gVal;
+    float g_pre = state;
+    float g_pre_2 = state;
+    float gs = alphaVal + betaVal + gammaVal;
+    float gdiff = 1 - gs;
+    float g_min = gs - gdiff;
+    float g_max = state;
+
+
+    std::vector<float> g_array;
+    std::vector<float> g_interp;
+    float g_plus;
+
+    int max_iterations = 100;  // Maximale Anzahl von Iterationen
+
+    for (int iteration = 0; iteration < max_iterations; ++iteration) {
+        // Berechnung der nächsten Iteration des g-Werts
+        float g_plus = state - std::log((1 / alphaVal) * (state - (betaVal * std::exp(state - g_pre) + gammaVal * std::exp(state - g_pre_2))));
+        g_pre_2 = g_pre;
+        g_pre = state;
+        state = g_plus;
+
+        g_array.push_back(g_plus);
+        float g_plus_inp = 2 * ((g_plus - g_min) / (g_max - g_min)) - 1;
+        g_interp.push_back(g_plus_inp);
+
+        // Überprüfung auf ungültigen Wert
+        if (!std::isfinite(g_plus)) {
+            g_interp.clear();
+            g_interp.resize(50, 0.0f);
+            break;
+        }
+    }
+
+    // Falls weniger als 50 Werte berechnet wurden, mit Nullen auffüllen
+    if (g_interp.size() < 50) {
+        g_interp.resize(50, 0.0f);
+    }
+
+    return g_interp;
 }

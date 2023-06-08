@@ -13,6 +13,8 @@
 #include "CustomLookAndFeel.h"
 #include "IPFSynth.h"
 #include "WaveTablePlot.h" 
+#include "cmp_plot.h"
+#include "cmp_frame.h"
 
 using namespace juce;
 
@@ -28,6 +30,8 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+
+    cmp::Plot plot;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -75,6 +79,11 @@ private:
     juce::Array<juce::Slider*> sliders;
     juce::Array<juce::TextButton*> radioButtons;
 
+    
+    // Erstellen Sie die y-Daten
+    std::vector<std::vector<float>> yData = { {} };
+    std::vector<std::vector<float>> xData = { {} };
+
     CustomLookAndFeel claf;
 
     void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue ,int min = 0, int max = 100, float steps = 0.01);
@@ -92,7 +101,9 @@ private:
     void adjustSliders();
     void updateWaveTablePath();
     void resetRange(juce::Slider& name, String ctrlID);
-
+    std::vector<float> arange(float start, float stop, float step = 1.0);
+    
+    std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal);
 
 
 
