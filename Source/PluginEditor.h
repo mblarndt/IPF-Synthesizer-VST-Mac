@@ -47,6 +47,8 @@ private:
     TextButton radioButton_13_square;
     TextButton radioButton_13_triangle;
     TextButton radioButton_13_saw;
+    TextButton radioButton_14_ipf;
+    TextButton radioButton_14_signal;
     Slider slider_input;
     Slider slider_gain;
     Slider slider_gdelta;
@@ -69,6 +71,11 @@ private:
     Path waveTablePath;
 
     String fileName;
+
+    bool plot_IPF;
+    bool plotSignal;
+    String previousBtn;
+    bool setupDone;
 
     std::unique_ptr<FileChooser> chooser;
 
@@ -103,7 +110,9 @@ private:
     void resetRange(juce::Slider& name, String ctrlID);
     std::vector<float> arange(float start, float stop, float step = 1.0);
     
-    std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal);
+    std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal = false);
+
+    std::vector<float> generateSineWaveTable();
 
 
 
