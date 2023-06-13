@@ -523,7 +523,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
 
     for (int iteration = 0; iteration < max_iterations; ++iteration) {
         // Berechnung der nächsten Iteration des g-Werts
-        float g_plus = state - std::log((1 / alphaVal) * (state - (betaVal * std::exp(state - g_pre) + gammaVal * std::exp(state - g_pre_2))));
+        g_plus = state - std::log((1 / alphaVal) * (state - (betaVal * std::exp(state - g_pre) + gammaVal * std::exp(state - g_pre_2))));
         g_pre_2 = g_pre;
         g_pre = state;
         state = g_plus;

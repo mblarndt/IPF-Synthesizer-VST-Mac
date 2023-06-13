@@ -5,8 +5,19 @@
               companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
-      <FILE id="asrbez" name="ArrayPlotComponent.cpp" compile="1" resource="0"
-            file="Source/Assets/ArrayPlotComponent.cpp"/>
+      <FILE id="aM1bQv" name="cmp_downsampler.cpp" compile="1" resource="0"
+            file="CustomMatPlot/source/cmp_downsampler.cpp"/>
+      <FILE id="yfZexK" name="cmp_frame.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_frame.cpp"/>
+      <FILE id="jtLf4g" name="cmp_graph_line.cpp" compile="1" resource="0"
+            file="CustomMatPlot/source/cmp_graph_line.cpp"/>
+      <FILE id="FgDZ0s" name="cmp_grid.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_grid.cpp"/>
+      <FILE id="SEMOKs" name="cmp_label.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_label.cpp"/>
+      <FILE id="ubChWi" name="cmp_legend.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_legend.cpp"/>
+      <FILE id="O2Eo3K" name="cmp_lookandfeel.cpp" compile="1" resource="0"
+            file="CustomMatPlot/source/cmp_lookandfeel.cpp"/>
+      <FILE id="zrf8sA" name="cmp_plot.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_plot.cpp"/>
+      <FILE id="sjJlw8" name="cmp_trace.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_trace.cpp"/>
+      <FILE id="Z3Qk0P" name="cmp_zoom.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_zoom.cpp"/>
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
       <FILE id="wUIREQ" name="CustomLookAndFeel.h" compile="0" resource="0"
@@ -27,26 +38,13 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="qqwbZk" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
-    <FILE id="m5t51c" name="cmp_downsampler.cpp" compile="1" resource="0"
-          file="CustomMatPlot/source/cmp_downsampler.cpp"/>
-    <FILE id="l0lb43" name="cmp_frame.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_frame.cpp"/>
-    <FILE id="dPnkNA" name="cmp_graph_line.cpp" compile="1" resource="0"
-          file="CustomMatPlot/source/cmp_graph_line.cpp"/>
-    <FILE id="II3NJ8" name="cmp_grid.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_grid.cpp"/>
-    <FILE id="W3WXtw" name="cmp_label.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_label.cpp"/>
-    <FILE id="i0SgAd" name="cmp_legend.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_legend.cpp"/>
-    <FILE id="pq68W3" name="cmp_lookandfeel.cpp" compile="1" resource="0"
-          file="CustomMatPlot/source/cmp_lookandfeel.cpp"/>
-    <FILE id="ucQPlX" name="cmp_plot.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_plot.cpp"/>
-    <FILE id="fUst1Z" name="cmp_trace.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_trace.cpp"/>
-    <FILE id="HOiQvm" name="cmp_zoom.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_zoom.cpp"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="IPF-Synthesizer-Mac" headerPath="C:\Users\The Stu\Documents\GitHub\IPF-Synthesizer-VST-Mac\CustomMatPlot\include\include_internal&#10;C:\Users\The Stu\Documents\GitHub\IPF-Synthesizer-VST-Mac\CustomMatPlot\include\include"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="IPF-Synthesizer-Mac" headerPath="C:\Users\The Stu\Documents\GitHub\IPF-Synthesizer-VST-Mac\CustomMatPlot\include\include_internal&#10;C:\Users\The Stu\Documents\GitHub\IPF-Synthesizer-VST-Mac\CustomMatPlot\include\include"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="IPF-Synthesizer-Mac"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="IPF-Synthesizer-Mac"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../Applications/JUCE/modules"/>
@@ -65,8 +63,8 @@
     </VS2022>
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="IPF-Synthesizer-Mac" headerPath="CustomMatPlot/include"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="IPF-Synthesizer-Mac" headerPath="CustomMatPlot/include"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="IPF-Synthesizer-Mac" headerPath="/Users/benarndt/Documents/GitHub/IPF-Synthesizer-VST-Mac/CustomMatPlot/include/include&#10;/Users/benarndt/Documents/GitHub/IPF-Synthesizer-VST-Mac/CustomMatPlot/include/include_internal"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="IPF-Synthesizer-Mac" headerPath="/Users/benarndt/Documents/GitHub/IPF-Synthesizer-VST-Mac/CustomMatPlot/include/include&#10;/Users/benarndt/Documents/GitHub/IPF-Synthesizer-VST-Mac/CustomMatPlot/include/include_internal"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../Applications/JUCE/modules"/>
