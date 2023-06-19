@@ -15,6 +15,10 @@
 #include "WaveTablePlot.h" 
 #include "cmp_plot.h"
 #include "cmp_frame.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 using namespace juce;
 
@@ -32,6 +36,8 @@ public:
     void resized() override;
 
     cmp::Plot plot;
+
+
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -86,6 +92,16 @@ private:
     juce::Array<juce::Slider*> sliders;
     juce::Array<juce::TextButton*> radioButtons;
 
+
+
+    std::vector<float> csvAlpha;
+    std::vector<float> csvBeta;
+    std::vector<float> csvIterations;
+
+    Array<Colour> betaColours;
+
+    Colour shape_colour;
+
     
     // Erstellen Sie die y-Daten
     std::vector<std::vector<float>> yData = { {} };
@@ -113,6 +129,16 @@ private:
     std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal = false);
 
     std::vector<float> generateSineWaveTable();
+
+    void drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours);
+
+    std::vector<float> readCSVFromString(const std::string& dataString);
+
+    std::vector<float> getIterationsForAlpha(float targetAlpha);
+
+    Array<Colour> generateColors(const std::vector<float>& iterations);
+
+    double roundToTwoDecimalPlaces(double value);
 
 
 

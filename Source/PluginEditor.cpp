@@ -9,7 +9,6 @@
 #include "PluginEditor.h"
 
 
-
 using namespace juce;
 
 
@@ -81,7 +80,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     radioButton_init(radioButton_14_signal, rb6, int(14));
     radioButton_14_ipf.setToggleState(true, dontSendNotification);
     
-
+    
     //plot.xLim(0, 500);
     plotSignal = false;
     yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
@@ -89,15 +88,17 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     plot.xLim(0, 100);
     plot.plot(yData);
 
-    
-    //plot.gridON();
-    //plot.setXTickLabels
-      
-    //plot.setYTickLabels({ "" });
+
     
     setSize(800, 479);
     
     setLookAndFeel(&claf);
+
+
+    const char* txtData = reinterpret_cast<const char*>(BinaryData::daten_csv);
+    readCSVFromString(txtData);
+    std::vector<float> iters = getIterationsForAlpha(0.5);
+    DBG(iters.size());
 
     setupDone = true;
 
@@ -117,7 +118,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
 
     g.setColour(juce::Colours::white);
     
-    Colour shape_colour = Colour::fromRGB(58, 58, 58);
+    shape_colour = Colour::fromRGB(58, 58, 58);
     
     //Right Side - Volume Field
     paint_shape(g, Rectangle<int>(695, 40, 105, 438), shape_colour);
@@ -156,6 +157,14 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_text(g, font, 18, text_colour, String("Phase-Mod"), 30, 267 + 18, false);
     paint_text(g, font, 18, text_colour, String("f-Mod"), 30, 302 + 18, false);
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer"), 40.0, 15+ 18, false);
+
+    // Größe und Position des Kreises
+
+    int diameter = 70;
+    // Zeichne den Kreis mit den Bereichen
+    drawColorfulCircle(g, 490, 407, diameter, betaColours);
+
+    
 
     
     //setAlpha(audioProcessor.velocity_mapped);
@@ -278,6 +287,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             value = 0.00001f;
 
         audioProcessor.alpha = value;
+
+        std::vector<float> iterations = getIterationsForAlpha(roundToTwoDecimalPlaces(value/100));
+        betaColours = generateColors(iterations);
 
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
@@ -624,4 +636,113 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::generateSineWaveTable(
     }
 
     return sineWaveTable;
+}
+
+void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours)
+{
+    int startAngle = 180;
+    // Berechnung des Radius
+    int radius = diameter / 2;
+
+    // Berechnung des Winkels pro Bereich
+    float anglePerSection = 2.0f * float_Pi / colours.size();
+
+    // Zeichne den Kreis mit den einzelnen Bereichen
+    for (int i = 0; i < colours.size(); ++i)
+    {
+        g.setColour(colours[i]);
+
+        // Erstelle den Pfad für den aktuellen Bereich
+        Path sectionPath;
+        sectionPath.addPieSegment(centerX - radius, centerY - radius,
+            diameter, diameter,
+            startAngle + i * anglePerSection, startAngle + (i + 1) * anglePerSection,
+            0.0);
+
+        // Fülle den Bereich mit der aktuellen Farbe
+        g.fillPath(sectionPath);
+    }
+    g.setColour(shape_colour);
+    g.fillEllipse(centerX - radius * 0.75, centerY - radius * 0.75, radius * 1.5, radius * 1.5);
+}
+
+
+
+
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(const std::string& dataString)
+{
+    std::vector<float> alpha;
+    std::vector<float> beta;
+    std::vector<float> iterations;
+
+    std::istringstream iss(dataString);
+    std::string line;
+    // Überspringe die erste Zeile (Header)
+    std::getline(iss, line);
+    while (std::getline(iss, line)) {
+        std::stringstream ss(line);
+        std::string cell;
+        std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+        alpha.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        beta.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        iterations.push_back(std::stof(cell));
+    }
+
+    csvAlpha = alpha;
+    csvBeta = beta;
+    csvIterations = iterations;
+
+    // Gib die Vektoren zurück
+    return alpha, beta, iterations;
+}
+
+
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getIterationsForAlpha(float targetAlpha) {
+    std::vector<float> iterations;
+
+    for (size_t i = 0; i < csvAlpha.size(); i++) {
+        if (csvAlpha[i] == targetAlpha) {
+            iterations.push_back(csvIterations[i]);
+        }
+    }
+
+    // Fülle den Vektor mit Nullen auf, falls erforderlich
+    while (iterations.size() < 100) {
+        iterations.push_back(0.0);
+    }
+
+    // Begrenze den Vektor auf 100 Einträge, falls erforderlich
+    iterations.resize(100);
+
+    return iterations;
+}
+
+Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::vector<float>& iterations) {
+    Array<Colour> colours;
+
+    for (const auto& value : iterations) {
+        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
+        if (value > 300 || value < 10) {
+            colours.add(Colours::red); // Markiere den Wert als rot
+        }
+        else {
+            colours.add(Colours::green); // Markiere den Wert als grün
+        }
+    }
+
+    // Fülle den Rest des Arrays mit Standardfarbwerten (z. B. Weiß)
+    while (colours.size() < 100) {
+        colours.add(Colours::white);
+    }
+
+    return colours;
+}
+
+
+
+double IPFSynthesizerVSTAudioProcessorEditor::roundToTwoDecimalPlaces(double value) {
+    double roundedValue = std::round(value * 100) / 100;
+    return roundedValue;
 }

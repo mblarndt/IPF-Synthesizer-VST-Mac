@@ -2,9 +2,12 @@
 
 <JUCERPROJECT id="tkZzDs" name="IPF-Synthesizer" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
-              companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
+              companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
+              cppLanguageStandard="20">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
+      <FILE id="H2iHxx" name="test.txt" compile="0" resource="1" file="Source/Data/test.txt"/>
+      <FILE id="qct5ox" name="daten.csv" compile="0" resource="1" file="Source/Data/daten.csv"/>
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
       <FILE id="wUIREQ" name="CustomLookAndFeel.h" compile="0" resource="0"
