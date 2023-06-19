@@ -712,12 +712,12 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getIterationsForAlpha(
     }
 
     // Fülle den Vektor mit Nullen auf, falls erforderlich
-    while (iterations.size() < 100) {
-        iterations.push_back(0.0);
-    }
+    //while (iterations.size() < 100) {
+    //    iterations.push_back(0.0);
+   //}
 
     // Begrenze den Vektor auf 100 Einträge, falls erforderlich
-    iterations.resize(100);
+    //iterations.resize(100);
 
     return iterations;
 }
@@ -736,9 +736,9 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
     }
 
     // Fülle den Rest des Arrays mit Standardfarbwerten (z. B. Weiß)
-    while (colours.size() < 100) {
-        colours.add(Colours::white);
-    }
+    //while (colours.size() < 100) {
+    //    colours.add(Colours::white);
+    //}
 
     return colours;
 }
