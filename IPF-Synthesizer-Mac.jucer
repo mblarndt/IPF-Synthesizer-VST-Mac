@@ -5,8 +5,6 @@
               companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
-      <FILE id="asrbez" name="ArrayPlotComponent.cpp" compile="1" resource="0"
-            file="Source/Assets/ArrayPlotComponent.cpp"/>
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
       <FILE id="wUIREQ" name="CustomLookAndFeel.h" compile="0" resource="0"
