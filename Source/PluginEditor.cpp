@@ -160,9 +160,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
 
     // Größe und Position des Kreises
 
-    int diameter = 70;
+    int diameter = 65;
     // Zeichne den Kreis mit den Bereichen
-    drawColorfulCircle(g, 490, 407, diameter, betaColours);
+    drawColorfulCircle(g, 490, 406, diameter, betaColours);
 
     
 
@@ -640,12 +640,13 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::generateSineWaveTable(
 
 void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours)
 {
-    int startAngle = 180;
+    int startAngle = -150; // Startwinkel in Grad
+    int endAngle = 150; // Endwinkel in Grad
     // Berechnung des Radius
     int radius = diameter / 2;
 
     // Berechnung des Winkels pro Bereich
-    float anglePerSection = 2.0f * float_Pi / colours.size();
+    float anglePerSection = static_cast<float>(endAngle - startAngle) * float_Pi / 180.0f / colours.size();
 
     // Zeichne den Kreis mit den einzelnen Bereichen
     for (int i = 0; i < colours.size(); ++i)
@@ -656,7 +657,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int 
         Path sectionPath;
         sectionPath.addPieSegment(centerX - radius, centerY - radius,
             diameter, diameter,
-            startAngle + i * anglePerSection, startAngle + (i + 1) * anglePerSection,
+            static_cast<float>(startAngle) * float_Pi / 180.0f + i * anglePerSection,
+            static_cast<float>(startAngle) * float_Pi / 180.0f + (i + 1) * anglePerSection,
             0.0);
 
         // Fülle den Bereich mit der aktuellen Farbe
@@ -665,6 +667,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int 
     g.setColour(shape_colour);
     g.fillEllipse(centerX - radius * 0.75, centerY - radius * 0.75, radius * 1.5, radius * 1.5);
 }
+
 
 
 
