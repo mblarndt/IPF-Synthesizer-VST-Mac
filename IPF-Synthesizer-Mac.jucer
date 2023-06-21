@@ -6,9 +6,8 @@
               cppLanguageStandard="20">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
-      <FILE id="rkFl1a" name="daten-1000.csv" compile="0" resource="1" file="Source/Data/daten-1000.csv"/>
-      <FILE id="H2iHxx" name="test.txt" compile="0" resource="1" file="Source/Data/test.txt"/>
-      <FILE id="qct5ox" name="daten.csv" compile="0" resource="1" file="Source/Data/daten.csv"/>
+      <FILE id="MQ8PTr" name="data_gamma.csv" compile="0" resource="1" file="Source/data/data_gamma.csv"/>
+      <FILE id="FyOWzB" name="data.csv" compile="0" resource="1" file="Source/data/data.csv"/>
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
       <FILE id="wUIREQ" name="CustomLookAndFeel.h" compile="0" resource="0"

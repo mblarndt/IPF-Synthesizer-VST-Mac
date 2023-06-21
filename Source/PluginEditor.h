@@ -96,9 +96,12 @@ private:
 
     std::vector<float> csvAlpha;
     std::vector<float> csvBeta;
+    std::vector<float> csvGamma;
     std::vector<float> csvIterations;
 
+    Array<Colour> alphaColours;
     Array<Colour> betaColours;
+    Array<Colour> gammaColours;
 
     Colour shape_colour;
 
@@ -134,9 +137,13 @@ private:
 
     std::vector<float> readCSVFromString(const std::string& dataString);
 
-    std::vector<float> getIterationsForAlpha(float targetAlpha);
+    std::vector<float> getAlphaIterations(float targetBeta, float targetGamma);
+    std::vector<float> getBetaIterations(float targetAlpha, float targetGamma);
+    std::vector<float> getGammaIterations(float targetAlpha, float targetBeta);
 
     Array<Colour> generateColors(const std::vector<float>& iterations);
+
+    void updateCircleColors();
 
     double roundToTwoDecimalPlaces(double value);
 

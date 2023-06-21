@@ -51,10 +51,10 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
 
     dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 1, 0.01);
     
-    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50);
+    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50, 0, 100, 1);
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
 
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43);
+    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43, 0, 100, 0.1);
     dial_init(dial_gamma, Slider::SliderStyle::Rotary, 3);
 
     dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
@@ -95,10 +95,8 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     setLookAndFeel(&claf);
 
 
-    const char* txtData = reinterpret_cast<const char*>(BinaryData::daten_csv);
+    const char* txtData = reinterpret_cast<const char*>(BinaryData::data_gamma_csv);
     readCSVFromString(txtData);
-    std::vector<float> iters = getIterationsForAlpha(0.5);
-    DBG(iters.size());
 
     setupDone = true;
 
@@ -160,9 +158,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
 
     // Größe und Position des Kreises
 
-    int diameter = 65;
+    int diameter = 67;
     // Zeichne den Kreis mit den Bereichen
-    drawColorfulCircle(g, 490, 406, diameter, betaColours);
+    //drawColorfulCircle(g, 350, 406, diameter, alphaColours);
+    drawColorfulCircle(g, 444, 406, diameter, betaColours);
+    drawColorfulCircle(g, 594, 406, diameter, gammaColours);
 
     
 
@@ -176,7 +176,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
 
 void IPFSynthesizerVSTAudioProcessorEditor::resized()
 {
-    int margin = 140;
+    int margin = 150;
 
     toggle_bypass.setBounds(750, 14, 23, 23);
     toggle_gdelta.setBounds(132, 266, 23, 23);
@@ -195,12 +195,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     
     slider_gain.setBounds(729, 92.21, 37.12, 306.56);
     
-    int startpos = 25;
-    dial_rate.setBounds(startpos, 369.5, 90.0, 90.0);
-    dial_g.setBounds(startpos + margin, 369.5, 90.0, 90.0);
-    dial_alpha.setBounds(startpos + margin * 2, 369.5, 90.0, 90.0);
-    dial_beta.setBounds(startpos + margin * 3, 369.5, 90.0, 90.0);
-    dial_gamma.setBounds(startpos + margin * 4, 369.5, 90.0, 90.0);
+    int startpos = 0;
+    dial_rate.setBounds(0, 369.5, 90.0, 90.0);
+    dial_g.setBounds(100, 369.5, 90.0, 90.0);
+    dial_alpha.setBounds(250, 369.5, 90.0, 90.0);
+    dial_beta.setBounds(250 + margin, 369.5, 90.0, 90.0);
+    dial_gamma.setBounds(250 + margin * 2, 369.5, 90.0, 90.0);
     slider_input.setBounds(215, 184, 250, 20);
 
     plot.setBounds(185, 62, 500, 270);
@@ -288,8 +288,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         audioProcessor.alpha = value;
 
-        std::vector<float> iterations = getIterationsForAlpha(roundToTwoDecimalPlaces(value/100));
-        betaColours = generateColors(iterations);
+        updateCircleColors();
 
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
@@ -330,6 +329,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         if (value <= 0.0f)
             value = 0.00001f;
 
+
+        updateCircleColors();
+
         // Regel: alpha > beta
         if (value >= dial_alpha.getValue())
             value = audioProcessor.alpha - 0.00001f;
@@ -361,6 +363,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
+
+        updateCircleColors();
 
         // Regel: beta > gamma
         if (value >= audioProcessor.beta)
@@ -429,7 +433,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         if (button == name)
         {
             String btn = button->getButtonText();
-            DBG(btn + ": Button Click");
+            //DBG(btn + ": Button Click");
         }
     }
 
@@ -440,7 +444,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         {
             if (button->getRadioGroupId() == 13) {
                 String btn = button->getButtonText();
-                DBG(btn + ": Button Click");
+                //DBG(btn + ": Button Click");
                 audioProcessor.chosenWavetable = btn;
                 updateWaveTablePath();
             }
@@ -448,7 +452,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                 String btn = button->getButtonText();
                 
                 if (btn != previousBtn) {
-                    DBG(btn + ": Button Click");
+                    //DBG(btn + ": Button Click");
 
                     if (btn == "Signal") {
                         plotSignal = true;
@@ -670,12 +674,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int 
 
 
 
-
-
 std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(const std::string& dataString)
 {
     std::vector<float> alpha;
     std::vector<float> beta;
+    std::vector<float> gamma;
     std::vector<float> iterations;
 
     std::istringstream iss(dataString);
@@ -690,34 +693,61 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
         std::getline(ss, cell, ';');
         beta.push_back(std::stof(cell));
         std::getline(ss, cell, ';');
+        gamma.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
         iterations.push_back(std::stof(cell));
     }
 
     csvAlpha = alpha;
     csvBeta = beta;
+    csvGamma = gamma;
     csvIterations = iterations;
 
     // Gib die Vektoren zurück
-    return alpha, beta, iterations;
+    return alpha, beta, gamma, iterations;
 }
 
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getIterationsForAlpha(float targetAlpha) {
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getAlphaIterations(float targetBeta, float targetGamma)
+{
     std::vector<float> iterations;
+    float beta = roundToTwoDecimalPlaces(targetBeta / 100);
+    float gamma = roundToTwoDecimalPlaces(targetGamma / 100);
 
     for (size_t i = 0; i < csvAlpha.size(); i++) {
-        if (csvAlpha[i] == targetAlpha) {
+        if (csvBeta[i] == beta && csvGamma[i] == gamma) {
             iterations.push_back(csvIterations[i]);
         }
     }
 
-    // Fülle den Vektor mit Nullen auf, falls erforderlich
-    //while (iterations.size() < 100) {
-    //    iterations.push_back(0.0);
-   //}
+    return iterations;
+}
 
-    // Begrenze den Vektor auf 100 Einträge, falls erforderlich
-    //iterations.resize(100);
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getBetaIterations(float targetAlpha, float targetGamma) {
+    std::vector<float> iterations;
+    float alpha = roundToTwoDecimalPlaces(targetAlpha/100);
+    float gamma = roundToTwoDecimalPlaces(targetGamma/100);
+
+    for (size_t i = 0; i < csvAlpha.size(); i++) {
+        if (csvAlpha[i] == alpha && csvGamma[i] == gamma) {
+            iterations.push_back(csvIterations[i]);
+        }
+    }
+
+    return iterations;
+}
+
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getGammaIterations(float targetAlpha, float targetBeta)
+{
+    std::vector<float> iterations;
+    float alpha = roundToTwoDecimalPlaces(targetAlpha/100);
+    float beta = roundToTwoDecimalPlaces(targetBeta/100);
+
+    for (size_t i = 0; i < csvAlpha.size(); i++) {
+        if (csvAlpha[i] == alpha && csvBeta[i] == beta) {
+            iterations.push_back(csvIterations[i]);
+        }
+    }
 
     return iterations;
 }
@@ -727,20 +757,29 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
 
     for (const auto& value : iterations) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
-        if (value > 300 || value < 10) {
-            colours.add(Colours::red); // Markiere den Wert als rot
+        if (value > 300 || value < 20) {
+            colours.add(Colours::orangered); // Markiere den Wert als rot
         }
         else {
-            colours.add(Colours::green); // Markiere den Wert als grün
+            colours.add(Colours::forestgreen); // Markiere den Wert als grün
         }
     }
 
-    // Fülle den Rest des Arrays mit Standardfarbwerten (z. B. Weiß)
-    //while (colours.size() < 100) {
-    //    colours.add(Colours::white);
-    //}
-
     return colours;
+}
+
+void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
+    float alphaval = dial_alpha.getValue();
+    float betaval = dial_beta.getValue();
+    float gammaval = dial_gamma.getValue();
+    std::vector<float> iterations;
+
+    //iterations = getAlphaIterations(betaval, gammaval);
+    //alphaColours = generateColors(iterations);
+    iterations = getBetaIterations(alphaval, gammaval);
+    betaColours = generateColors(iterations);
+    iterations = getGammaIterations(alphaval, betaval);
+    gammaColours = generateColors(iterations);
 }
 
 
