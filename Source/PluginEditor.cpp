@@ -95,7 +95,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     setLookAndFeel(&claf);
 
 
-    const char* txtData = reinterpret_cast<const char*>(BinaryData::data_gamma_csv);
+    const char* txtData = reinterpret_cast<const char*>(BinaryData::results_abg_csv);
     readCSVFromString(txtData);
 
     setupDone = true;
@@ -153,7 +153,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
     paint_text(g, font, 18, text_colour, String("Phase-Mod"), 30, 267 + 18, false);
-    paint_text(g, font, 18, text_colour, String("f-Mod"), 30, 302 + 18, false);
+    paint_text(g, font, 18, text_colour, String("Amp-Mod"), 30, 302 + 18, true);
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer"), 40.0, 15+ 18, false);
 
     // Größe und Position des Kreises
@@ -359,12 +359,13 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     }
     else if (slider == &dial_gamma) {
         //plot.plot(yData);
+        updateCircleColors();
 
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
 
-        updateCircleColors();
+        
 
         // Regel: beta > gamma
         if (value >= audioProcessor.beta)
@@ -754,7 +755,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getGammaIterations(flo
 
 Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::vector<float>& iterations) {
     Array<Colour> colours;
-
+    /*
     for (const auto& value : iterations) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
         if (value > 300 || value < 20) {
@@ -763,6 +764,20 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
         else {
             colours.add(Colours::forestgreen); // Markiere den Wert als grün
         }
+    }
+    */
+
+    for (const auto& value : iterations) {
+        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
+        if (value == 0)
+            colours.add(Colours::orangered); // Markiere den Wert als rot
+        else if (value == 1)
+            colours.add(Colours::orange); // Markiere den Wert als grün
+        else if (value == 2)
+            colours.add(Colours::forestgreen); // Markiere den Wert als grün
+        else if (value == 3)
+            colours.add(Colours::blueviolet); // Markiere den Wert als grün
+        
     }
 
     return colours;
