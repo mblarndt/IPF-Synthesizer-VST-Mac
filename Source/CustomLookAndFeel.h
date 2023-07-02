@@ -14,7 +14,7 @@ class CustomLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
 
-    /*
+    
     void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                            float sliderPosProportional, float rotaryStartAngle,
                            float rotaryEndAngle, juce::Slider& slider) override
@@ -65,7 +65,7 @@ public:
         g.setColour (slider.findColour (juce::Slider::thumbColourId));
         g.fillEllipse (juce::Rectangle<float> (thumbWidth, thumbWidth).withCentre (thumbPoint));
     }
-    */
+    
     
 
     void drawTickBox(juce::Graphics& g, juce::Component& /*component*/,

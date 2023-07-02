@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include "WavetableGenerator.h"
 
 using namespace juce;
 
@@ -111,6 +112,7 @@ private:
     std::vector<std::vector<float>> xData = { {} };
 
     CustomLookAndFeel claf;
+    WaveTableGenerator wtg;
 
     void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue ,int min = 0, int max = 100, float steps = 0.01);
     void button_init(juce::TextButton& name, String& button_text);
@@ -131,7 +133,6 @@ private:
     
     std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal = false);
 
-    std::vector<float> generateSineWaveTable();
 
     void drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours);
 

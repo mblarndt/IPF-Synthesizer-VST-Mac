@@ -98,6 +98,8 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     const char* txtData = reinterpret_cast<const char*>(BinaryData::results_abg_csv);
     readCSVFromString(txtData);
 
+    audioProcessor.chosenWavetable = "sine";
+
     setupDone = true;
 
 }
@@ -299,7 +301,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         
 
-        dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
+        // dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
 
         float new_gamma_max = dial_beta.getValue();
 
@@ -315,7 +317,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         if (dial_gamma.getValue() >= new_gamma_max)
             audioProcessor.gamma = new_gamma_max;
 
-        dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
+        //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
 
         dial_beta.repaint();
         dial_gamma.repaint();
@@ -345,7 +347,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             new_max = dial_alpha.getValue() - value;
 
         if (new_max <= 0.0f)
-            new_max = 0.00001f;
+            new_max = 0.01f;
 
         dial_gamma.setRange(0.0, new_max, 0.01);
 
@@ -353,7 +355,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         if (dial_gamma.getValue() >= new_max)
             audioProcessor.gamma = new_max - 0.001;
 
-        dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
+        //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
 
         dial_gamma.repaint();
     }
@@ -448,6 +450,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                 //DBG(btn + ": Button Click");
                 audioProcessor.chosenWavetable = btn;
                 updateWaveTablePath();
+
             }
             if (button->getRadioGroupId() == 14) {
                 String btn = button->getButtonText();
@@ -457,20 +460,20 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
 
                     if (btn == "Signal") {
                         plotSignal = true;
-                        plot.xLim(0, 6400);
+                        plot.xLim(0, 6414);
                     }
                     else {
                         plotSignal = false;
-                        plot.xLim(0, 100);
+                        plot.xLim(-3.5, 104);
 
                     }
-                    yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
-                    plot.plot(yData);
                 }
 
                 previousBtn = btn;
 
             }
+            yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
+            plot.plot(yData); // Plot using time values on x-axis
         }
     }
 }
@@ -574,7 +577,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
 
     float g_plus;
 
-    int max_iterations = 100;  // Maximale Anzahl von Iterationen
+    int max_iterations = 300;  // Maximale Anzahl von Iterationen
 
     for (int iteration = 0; iteration < max_iterations; ++iteration) {
         // Berechnung der nächsten Iteration des g-Werts
@@ -604,7 +607,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
 
     if (calcSignal == true) {
         
-        std::vector<float> sine = generateSineWaveTable();
+        std::vector<float> sine = wtg.generateWaveTable(audioProcessor.chosenWavetable);
 
         for (int i = 0; i < g_interp.size(); ++i) {
             float value = g_interp[i];
@@ -628,20 +631,6 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     return output;
 }
 
-
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::generateSineWaveTable()
-{
-    constexpr auto WAVETABLE_LENGTH = 64;
-    const auto PI = std::atanf(1.f) * 4;
-    std::vector<float> sineWaveTable = std::vector<float>(WAVETABLE_LENGTH);
-
-    for (auto i = 0; i < WAVETABLE_LENGTH; ++i)
-    {
-        sineWaveTable[i] = std::sinf(2 * PI * static_cast<float>(i) / WAVETABLE_LENGTH);
-    }
-
-    return sineWaveTable;
-}
 
 void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours)
 {

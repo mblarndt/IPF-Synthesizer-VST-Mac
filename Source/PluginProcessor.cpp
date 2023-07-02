@@ -23,7 +23,7 @@ IPFSynthesizerVSTAudioProcessor::IPFSynthesizerVSTAudioProcessor()
 {
     // Erstelle und füge Parameter hinzu
     addSliderParameter("g", "State", NormalisableRange<float>(0.0f, 1.0f, 0.001f), 100.0f);
-    addSliderParameter("alpha", "Input Strength", NormalisableRange<float>(0.0f, 100.0f, 0.1f), 50.0f);
+    addSliderParameter("alpha", "Input Strength", NormalisableRange<float>(30.0f, 100.0f, 0.1f), 50.0f);
     addSliderParameter("beta", "1. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.1f), 45.0f);
     addSliderParameter("gamma", "2. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.1f), 4.0f);
     addSliderParameter("gain", "Gain", NormalisableRange<float>(-100.0f, 20.0f, 0.1f), -10.0f);

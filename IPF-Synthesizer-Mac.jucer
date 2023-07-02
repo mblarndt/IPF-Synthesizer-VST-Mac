@@ -6,6 +6,10 @@
               cppLanguageStandard="20">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
+      <FILE id="s2MtBs" name="WaveTableGenerator.h" compile="0" resource="0"
+            file="Source/WaveTableGenerator.h"/>
+      <FILE id="e4dS4G" name="WaveTableGenerator.cpp" compile="1" resource="0"
+            file="Source/data/WaveTableGenerator.cpp"/>
       <FILE id="tSMSTI" name="results_abg.csv" compile="0" resource="1" file="Source/data/results_abg.csv"/>
       <FILE id="MQ8PTr" name="data_gamma.csv" compile="0" resource="1" file="Source/data/data_gamma.csv"/>
       <FILE id="FyOWzB" name="data.csv" compile="0" resource="1" file="Source/data/data.csv"/>
