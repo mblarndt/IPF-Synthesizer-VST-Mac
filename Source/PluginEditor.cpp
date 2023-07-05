@@ -142,7 +142,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
     paint_text(g, font, 18, text_colour, String("Phase-Mod"), 30, 267 + 18, false);
-    paint_text(g, font, 18, text_colour, String("f-Mod"), 30, 302 + 18, false);
+    paint_text(g, font, 18, text_colour, String("Amp-Mod"), 30, 302 + 18, false);
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer"), 40.0, 15+ 18, false);
 
     
