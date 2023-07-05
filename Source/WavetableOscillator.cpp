@@ -72,7 +72,7 @@ void WavetableOscillator::setPhaseShift(float shift)
         phaseShift = 1 - abs(shift);
     else
         phaseShift = shift;
-    DBG(phaseShift);
+    //DBG(phaseShift);
 }
 
 
@@ -145,7 +145,7 @@ float WavetableOscillator::calculate_amp()
     
     g_delta = g_plus_mapped - g_mapped;
     //g_delta = remap(g_delta , alpha, beta, gamma);
-    DBG(g_delta);
+    //DBG(g_delta);
     setPhaseShift(g_delta / 2);
     //const float g_plus_fmod = juce::jmap<float>(g_plus_mapped, 0, 360);
     

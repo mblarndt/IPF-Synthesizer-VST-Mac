@@ -15,6 +15,11 @@
 #include "WaveTablePlot.h" 
 #include "cmp_plot.h"
 #include "cmp_frame.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include "WavetableGenerator.h"
 
 using namespace juce;
 
@@ -33,6 +38,8 @@ public:
 
     cmp::Plot plot;
 
+
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -47,6 +54,8 @@ private:
     TextButton radioButton_13_square;
     TextButton radioButton_13_triangle;
     TextButton radioButton_13_saw;
+    TextButton radioButton_14_ipf;
+    TextButton radioButton_14_signal;
     Slider slider_input;
     Slider slider_gain;
     Slider slider_gdelta;
@@ -70,6 +79,11 @@ private:
 
     String fileName;
 
+    bool plot_IPF;
+    bool plotSignal;
+    String previousBtn;
+    bool setupDone;
+
     std::unique_ptr<FileChooser> chooser;
 
     std::vector<float> waveTable;
@@ -79,12 +93,26 @@ private:
     juce::Array<juce::Slider*> sliders;
     juce::Array<juce::TextButton*> radioButtons;
 
+
+
+    std::vector<float> csvAlpha;
+    std::vector<float> csvBeta;
+    std::vector<float> csvGamma;
+    std::vector<float> csvIterations;
+
+    Array<Colour> alphaColours;
+    Array<Colour> betaColours;
+    Array<Colour> gammaColours;
+
+    Colour shape_colour;
+
     
     // Erstellen Sie die y-Daten
     std::vector<std::vector<float>> yData = { {} };
     std::vector<std::vector<float>> xData = { {} };
 
     CustomLookAndFeel claf;
+    WaveTableGenerator wtg;
 
     void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue ,int min = 0, int max = 100, float steps = 0.01);
     void button_init(juce::TextButton& name, String& button_text);
@@ -103,7 +131,22 @@ private:
     void resetRange(juce::Slider& name, String ctrlID);
     std::vector<float> arange(float start, float stop, float step = 1.0);
     
-    std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal);
+    std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal = false);
+
+
+    void drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours);
+
+    std::vector<float> readCSVFromString(const std::string& dataString);
+
+    std::vector<float> getAlphaIterations(float targetBeta, float targetGamma);
+    std::vector<float> getBetaIterations(float targetAlpha, float targetGamma);
+    std::vector<float> getGammaIterations(float targetAlpha, float targetBeta);
+
+    Array<Colour> generateColors(const std::vector<float>& iterations);
+
+    void updateCircleColors();
+
+    double roundToTwoDecimalPlaces(double value);
 
 
 
