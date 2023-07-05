@@ -20,7 +20,7 @@ vector<float> WaveTableGenerator::generateWaveTable(juce::String type)
         waveTable = generateSawtoothWaveTable();
     else if (type == "triangle")
         waveTable = generateTriangleWaveTable();
-    else if (type == "square")
+    else if (type == "square") 
         waveTable = generateSquareWaveTable();
 
     return waveTable;
