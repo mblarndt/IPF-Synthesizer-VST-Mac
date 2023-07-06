@@ -47,8 +47,9 @@ private:
 
     TextButton button_file;
     ToggleButton toggle_bypass;
-    ToggleButton toggle_gdelta;
-    ToggleButton toggle_fmod;
+    ToggleButton toggle_phasemod;
+    ToggleButton toggle_freqmod;
+    ToggleButton toggle_ampmod;
     ToggleButton toggle_exp;
     TextButton radioButton_13_sine;
     TextButton radioButton_13_square;
@@ -58,8 +59,10 @@ private:
     TextButton radioButton_14_signal;
     Slider slider_input;
     Slider slider_gain;
-    Slider slider_gdelta;
+
+    Slider slider_phasemod;
     Slider slider_fmod;
+    Slider slider_ampmod;
     Slider slider_exp;
     Slider dial_g;
     Slider dial_rate;
@@ -67,6 +70,10 @@ private:
     Slider dial_alpha;
     Slider dial_beta;
     Slider dial_gamma;
+
+    Slider dial_phasemod;
+    Slider dial_ampmod;
+    Slider dial_freqmod;
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> alphaAttachment;
@@ -74,6 +81,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gammaAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> rateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> ampmodAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> phasemodAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqmodAttachment;
     
     Path waveTablePath;
 

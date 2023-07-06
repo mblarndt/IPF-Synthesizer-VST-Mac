@@ -22,7 +22,6 @@ public:
     float ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2);
     float calculate_amp();
     int ipf_counter;
-    bool phaseMod;
 
     //Control Methods
     void setG(float newG);
@@ -30,7 +29,16 @@ public:
     void setBeta(float newBeta);
     void setGamma(float newGamma);
     
-    void setphaseMod(bool state);
+    void setphaseMod(bool state, float value);
+    void setampMod(bool state, float value);
+    void setfreqMod(bool state, float value);
+
+    bool phaseMod;
+    bool ampMod;
+    bool freqMod;
+    float ampmod;
+    float phasemod;
+    float freqmod;
 
 
 

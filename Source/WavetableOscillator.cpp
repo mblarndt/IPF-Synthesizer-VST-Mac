@@ -24,7 +24,9 @@ float WavetableOscillator::getSample()
     //desiredPeriodCount = desiredPeriodCount * 0.5;
     if (sampleCounter >= (desiredPeriodCount * ipf_rate))
     {
+
         calculate_amp();
+
         sampleCounter = 0;
         
     }
@@ -38,7 +40,10 @@ float WavetableOscillator::getSample()
         sample = originalSample + phaseShiftedSample;
     }
     
-    sample *= amplitude;
+    if (ampMod == true)
+        sample *= amplitude;
+    else
+        sample = originalSample;
 
     return sample;
 }
@@ -99,9 +104,22 @@ void WavetableOscillator::setAmplitude(float amp)
     amplitude = amp;
 }
 
-void WavetableOscillator::setphaseMod(bool state)
+void WavetableOscillator::setphaseMod(bool state, float value)
 {
     phaseMod = state;
+    phasemod = value;
+}
+
+void WavetableOscillator::setampMod(bool state, float value)
+{
+    ampMod = state;
+    ampmod = value;
+}
+
+void WavetableOscillator::setfreqMod(bool state, float value)
+{
+    freqMod = state;
+    freqmod = value;
 }
 
 void WavetableOscillator::resetIPF()
@@ -144,13 +162,10 @@ float WavetableOscillator::calculate_amp()
     const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
     
     g_delta = g_plus_mapped - g_mapped;
-    //g_delta = remap(g_delta , alpha, beta, gamma);
-    //DBG(g_delta);
+
     setPhaseShift(g_delta / 2);
-    //const float g_plus_fmod = juce::jmap<float>(g_plus_mapped, 0, 360);
     
-    
-    amplitude = std::abs(g_plus_mapped);
+    amplitude = std::abs(g_plus);
 
     return amplitude;
 }

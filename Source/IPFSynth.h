@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 
 #include "WavetableOscillator.h"
+#include "WaveTableGenerator.h"
 
 class IPFSynth
 {
@@ -16,24 +17,24 @@ public:
     float volume;
     float ipf_rate;
     bool phaseMod;
+    bool ampMod;
+    bool freqMod;
 
     float g_val;
     float alpha_val;
     float beta_val;
     float gamma_val;
+    float ampmod;
+    float phasemod;
+    float freqmod;
     
     float velocity_mapped;
 
+    WaveTableGenerator generator;
     std::vector<float> currentWavetable;
     std::vector<float> customWavetable;
 
-private:
-    static std::vector<float> generateSineWaveTable();
-    static std::vector<float> generateSquareWaveTable();
-    static std::vector<float> generateSawtoothWaveTable();
-    static std::vector<float> generateTriangleWaveTable();
-
-    
+private:    
     void handleMidiEvent(const juce::MidiMessage& midiMessage);
     void render(juce::AudioBuffer<float>& buffer, int beginSample, int endSample);
 
