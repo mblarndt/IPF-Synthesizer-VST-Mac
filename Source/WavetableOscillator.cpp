@@ -35,15 +35,14 @@ float WavetableOscillator::getSample()
     
     if(phaseMod == true) {
         // Phasenverschobenes Sample generieren
-        auto phaseShiftedSample = interpolateLinearlyWithPhaseShift(phaseShift);
+        auto phaseShiftedSample = interpolateLinearlyWithPhaseShift(phaseShift * phasemod);
         // Kombinierte Samples
         sample = originalSample + phaseShiftedSample;
     }
     
     if (ampMod == true)
         sample *= amplitude;
-    else
-        sample = originalSample;
+
 
     return sample;
 }
@@ -156,16 +155,23 @@ float WavetableOscillator::calculate_amp()
     g_pre_2 = g_pre;
     g_pre = g;
     
-    const float g_mapped = remap(g, alpha, beta, gamma);
+    //const float g_mapped = remap(g, alpha, beta, gamma);
+    float gs = alpha + beta + gamma;
+    const float g_mapped = (g / gs) -  1;
+    
     g = g_plus;
     
-    const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
+    //const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
+    const float g_plus_mapped = (g_plus / gs) - 1;
     
-    g_delta = g_plus_mapped - g_mapped;
+    g_delta = abs(g_plus_mapped -g_mapped);
+    g_delta = g_delta * phasemod;
 
-    setPhaseShift(g_delta / 2);
-    
-    amplitude = std::abs(g_plus);
+    setPhaseShift(g_delta);
+    float signalmod = g_plus_mapped * ampmod;
+    amplitude = abs(signalmod + 1);
+
+    //DBG(amplitude);
 
     return amplitude;
 }

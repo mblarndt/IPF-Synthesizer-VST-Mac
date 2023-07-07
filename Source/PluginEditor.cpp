@@ -60,7 +60,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     toggle_init(toggle_freqmod);
 
     //Mod-Influence
-    dial_init(dial_phasemod, Slider::SliderStyle::Rotary, 1, 0, 10);
+    dial_init(dial_phasemod, Slider::SliderStyle::Rotary, 1, 0, 2);
     dial_init(dial_ampmod, Slider::SliderStyle::Rotary, 1, 0, 10);
     dial_init(dial_freqmod, Slider::SliderStyle::Rotary, 1, 0, 10);
 
@@ -100,7 +100,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     //plot.xLim(0, 500);
     plotSignal = false;
     yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
-    plot.yLim(0.5, 1.5);
+    plot.yLim(-2, 2);
     plot.xLim(0, 100);
     plot.plot(yData);
 
@@ -508,10 +508,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                     if (btn == "Signal") {
                         plotSignal = true;
                         plot.xLim(0, 6414);
+                        plot.yLim(-2, 2);
                     }
                     else {
                         plotSignal = false;
                         plot.xLim(-3.5, 104);
+                        plot.yLim(-2, 2);
 
                     }
                 }
@@ -615,15 +617,23 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     float gdiff = 1 - gs;
     float g_min = gs - gdiff;
     float g_max = state;
-    float g_plus_norm;
+
+    float g_delta;
+    float g_mapped;
+    float g_plus_mapped;
+    float g_ampmod;
+    float g_signalmod;
+    float phaseShift;
 
 
     std::vector<float> g_array;
+    std::vector<float> g_mod;
     std::vector<float> g_interp;
     std::vector<float> modified_interp; // Neues Array für den modifizierten Output
+    std::vector<float> phaseshifts;
     std::vector<float> output;
 
-    float g_plus;
+    float g_plus = gVal;
 
     int max_iterations = 300;  // Maximale Anzahl von Iterationen
 
@@ -634,10 +644,29 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
         g_pre = state;
         state = g_plus;
 
-        g_plus_norm = g_plus / gs;
-        g_array.push_back(g_plus_norm);
-        //float g_plus_inp = 2 * ((g_plus - g_min) / (g_max - g_min)) - 1;
-        //g_interp.push_back(g_plus_inp);
+        
+        float g_norm = state / gs;
+        g_mapped = g_norm - 1;
+
+        float g_plus_norm = g_plus / gs;
+        g_plus_mapped = g_plus_norm - 1;
+
+        float shift = g_delta = abs(g_plus_mapped - g_mapped) / 2;
+
+        if ( shift <= 0)
+            phaseShift = 1 - abs(shift);
+        else
+            phaseShift = shift;
+
+        DBG(shift);
+
+        phaseshifts.push_back(phaseShift);
+        g_ampmod = g_mapped * dial_ampmod.getValue();
+        g_signalmod = (g_ampmod + 1);
+        g_mod.push_back(g_ampmod);
+        g_array.push_back(g_signalmod);
+
+        
 
         // Überprüfung auf ungültigen Wert
         if (!std::isfinite(g_plus_norm)) {
@@ -650,11 +679,14 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     if (calcSignal == true) {
         
         std::vector<float> sine = wtg.generateWaveTable(audioProcessor.chosenWavetable);
-
+        float signal;
         for (int i = 0; i < g_array.size(); ++i) {
             float value = g_array[i];
+
+            //Alle Werte der Phase mit dem Wert verrechnen
             for (int p = 0; p < sine.size(); p++) {
-                modified_interp.push_back(value * sine[p]);
+                signal = value * sine[p];
+                modified_interp.push_back(signal);
             }
 
         }
@@ -665,7 +697,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             g_array.push_back(0);
         }
         
-        output = g_array;
+        output = g_mod;
     }    
     else
         output = modified_interp;
