@@ -71,11 +71,6 @@ public:
     float velocity_mapped;
     
     bool phaseMod;
-    bool ampMod;
-    bool freqMod;
-    float ampmod;
-    float phasemod;
-    float freqmod;
 
     juce::String chosenWavetable;
     juce::String oldWavetable;

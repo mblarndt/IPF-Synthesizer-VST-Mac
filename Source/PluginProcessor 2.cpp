@@ -22,15 +22,12 @@ IPFSynthesizerVSTAudioProcessor::IPFSynthesizerVSTAudioProcessor()
     apvts(*this, nullptr)
 {
     // Erstelle und füge Parameter hinzu
-    addSliderParameter("g", "State", NormalisableRange<float>(0.0f, 5.0f, 0.001f), 100.0f);
+    addSliderParameter("g", "State", NormalisableRange<float>(0.0f, 1.0f, 0.001f), 100.0f);
     addSliderParameter("alpha", "Input Strength", NormalisableRange<float>(30.0f, 100.0f, 0.1f), 50.0f);
     addSliderParameter("beta", "1. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.1f), 45.0f);
     addSliderParameter("gamma", "2. Reflection", NormalisableRange<float>(0.0f, 100.0f, 0.1f), 4.0f);
     addSliderParameter("gain", "Gain", NormalisableRange<float>(-100.0f, 20.0f, 0.1f), -10.0f);
-    addSliderParameter("ampmod", "Amplitude Modulation", NormalisableRange<float>(0.0f, 10.0f, 0.1f), 1.0f);
-    addSliderParameter("phasemod", "Phase Modulation", NormalisableRange<float>(0.0f, 2.0f, 0.01f), 1.0f);
-    addSliderParameter("freqmod", "Frequency Modulation", NormalisableRange<float>(0.0f, 10.0f, 0.01f), 1.0f);
-    //addSliderParameter("rate", "Rate", NormalisableRange<float>(0, 4, 0.25f), 1.0f);
+    addSliderParameter("rate", "Rate", NormalisableRange<float>(0, 4, 0.25f), 1.0f);
     
     juce::ValueTree defaultState("MyPluginState");  // Erstelle eine ValueTree-Instanz
     apvts.state = defaultState;  // Weise die ValueTree-Instanz dem apvts-Objekt zu
@@ -153,17 +150,8 @@ void IPFSynthesizerVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 
     synth.setValues(g, alpha, beta, gamma);
     synth.setVolume(volume);
-
-    synth.ampmod = ampmod;
-    synth.phasemod = phasemod;
-    synth.freqmod = freqmod;
-    synth.ampMod = ampMod;
+    synth.ipf_rate = ipf_rate;
     synth.phaseMod = phaseMod;
-    synth.freqMod = freqMod;
-
-    //synth.ipf_rate = ipf_rate;
-    synth.ipf_rate = 1;
-    //synth.phaseMod = phaseMod;
 
     if (chosenWavetable != oldWavetable) {
         if (chosenWavetable == "custom")

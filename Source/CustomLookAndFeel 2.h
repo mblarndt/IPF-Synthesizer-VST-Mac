@@ -13,20 +13,20 @@
 class CustomLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
-    
+
     
     void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                            float sliderPosProportional, float rotaryStartAngle,
                            float rotaryEndAngle, juce::Slider& slider) override
     {
         auto outline = slider.findColour (juce::Slider::rotarySliderOutlineColourId);
-        auto fill = juce::Colour::fromRGB(175, 61, 255);
+        auto fill = juce::Colour::fromRGB(20, 100, 130);
 
         auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (10);
 
         auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
         auto toAngle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
-        auto lineW = 4.0f;
+        auto lineW = 6.0f;
         auto arcRadius = radius - lineW * 0.5f;
 
         juce::Path backgroundArc;
