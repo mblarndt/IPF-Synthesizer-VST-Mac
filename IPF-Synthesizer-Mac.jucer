@@ -5,19 +5,24 @@
               companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
-      <FILE id="aM1bQv" name="cmp_downsampler.cpp" compile="1" resource="0"
-            file="CustomMatPlot/source/cmp_downsampler.cpp"/>
-      <FILE id="yfZexK" name="cmp_frame.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_frame.cpp"/>
-      <FILE id="jtLf4g" name="cmp_graph_line.cpp" compile="1" resource="0"
-            file="CustomMatPlot/source/cmp_graph_line.cpp"/>
-      <FILE id="FgDZ0s" name="cmp_grid.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_grid.cpp"/>
-      <FILE id="SEMOKs" name="cmp_label.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_label.cpp"/>
-      <FILE id="ubChWi" name="cmp_legend.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_legend.cpp"/>
-      <FILE id="O2Eo3K" name="cmp_lookandfeel.cpp" compile="1" resource="0"
-            file="CustomMatPlot/source/cmp_lookandfeel.cpp"/>
-      <FILE id="zrf8sA" name="cmp_plot.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_plot.cpp"/>
-      <FILE id="sjJlw8" name="cmp_trace.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_trace.cpp"/>
-      <FILE id="Z3Qk0P" name="cmp_zoom.cpp" compile="1" resource="0" file="CustomMatPlot/source/cmp_zoom.cpp"/>
+      <FILE id="IjHEqD" name="WaveTableGenerator.cpp" compile="1" resource="0"
+            file="Source/WaveTableGenerator.cpp"/>
+      <FILE id="hHFeO2" name="WaveTableGenerator.h" compile="0" resource="0"
+            file="Source/WaveTableGenerator.h"/>
+      <FILE id="ItXWtO" name="results_abg.csv" compile="0" resource="1" file="Source/data/results_abg.csv"/>
+      <FILE id="VGqVtq" name="cmp_downsampler.cpp" compile="1" resource="0"
+            file="Source/cmp_downsampler.cpp"/>
+      <FILE id="FWb6IJ" name="cmp_frame.cpp" compile="1" resource="0" file="Source/cmp_frame.cpp"/>
+      <FILE id="x40CLI" name="cmp_graph_line.cpp" compile="1" resource="0"
+            file="Source/cmp_graph_line.cpp"/>
+      <FILE id="MQ6Pcv" name="cmp_grid.cpp" compile="1" resource="0" file="Source/cmp_grid.cpp"/>
+      <FILE id="MqNojf" name="cmp_label.cpp" compile="1" resource="0" file="Source/cmp_label.cpp"/>
+      <FILE id="TxxO7c" name="cmp_legend.cpp" compile="1" resource="0" file="Source/cmp_legend.cpp"/>
+      <FILE id="a3vZNv" name="cmp_lookandfeel.cpp" compile="1" resource="0"
+            file="Source/cmp_lookandfeel.cpp"/>
+      <FILE id="ExWfcG" name="cmp_plot.cpp" compile="1" resource="0" file="Source/cmp_plot.cpp"/>
+      <FILE id="RdiwWs" name="cmp_trace.cpp" compile="1" resource="0" file="Source/cmp_trace.cpp"/>
+      <FILE id="hA9YOY" name="cmp_zoom.cpp" compile="1" resource="0" file="Source/cmp_zoom.cpp"/>
       <FILE id="LxxbWL" name="off.png" compile="0" resource="1" file="Source/Assets/off.png"/>
       <FILE id="cJ8IdW" name="on.png" compile="0" resource="1" file="Source/Assets/on.png"/>
       <FILE id="wUIREQ" name="CustomLookAndFeel.h" compile="0" resource="0"

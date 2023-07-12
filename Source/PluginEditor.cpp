@@ -85,7 +85,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     plotSignal = false;
     yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
     plot.yLim(-1.2, 1.2);
-    plot.xLim(0, 100);
+    plot.xLim(0, 200);
     plot.plot(yData);
 
 
