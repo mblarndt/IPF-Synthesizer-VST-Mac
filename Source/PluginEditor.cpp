@@ -676,8 +676,8 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
 
         
         float g_norm = state / gs;
-        g_mapped = g_norm - 1;
-        //g_mapped = state;
+        //g_mapped = g_norm - 1;
+        g_mapped = state;
 
         float g_plus_norm = g_plus / gs;
         g_plus_mapped = g_plus_norm - 1;
@@ -688,8 +688,6 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             phaseShift = 1 - abs(shift);
         else
             phaseShift = shift;
-
-        DBG(shift);
 
         phaseshifts.push_back(phaseShift);
         g_ampmod = g_mapped * dial_ampmod.getValue();
@@ -795,7 +793,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
     csvIterations = iterations;
 
     // Gib die Vektoren zurück
-    return alpha, beta, gamma, iterations;
+    return static_cast<void>(alpha), static_cast<void>(beta), static_cast<void>(gamma), iterations;
 }
 
 
