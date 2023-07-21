@@ -161,9 +161,13 @@ private:
 
     void updateCircleColors();
 
-    double roundToTwoDecimalPlaces(double value);
+    float roundToTwoDecimalPlaces(float value);
     
     void reloadIPF();
+    
+    float linearInterpolation(float x, float x0, float y0, float x1, float y1);
+    
+    std::vector<float> interpolateArray(const std::vector<float>& inputArray, int newLength);
 
 
 

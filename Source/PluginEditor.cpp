@@ -191,6 +191,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     drawColorfulCircle(g, dial_alpha.getBounds().getX()+45, 406, diameter, alphaColours);
     drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
     drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
+    updateCircleColors();
     
 }
 
@@ -413,6 +414,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     }
     else if (slider == &dial_g) {
         audioProcessor.g = slider->getValue();
+        reloadIPF();
     }
     else if (slider == &slider_gain) {
         float volume = std::pow(10.0f, slider->getValue() / 20.0f);
@@ -431,7 +433,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     //    audioProcessor.ipf_rate = slider->getValue();
     //}
     
-    if(toggle_fixstate.getToggleState() == true)
+    if(toggle_fixstate.getToggleState() == false)
         dial_g.setValue((1/dial_alpha.getValue()));
 
 
@@ -486,7 +488,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         else if (button == &toggle_fixstate) {
             bool value = button->getToggleState();
             //audioProcessor.freqMod = value;
-            if(value == true) {
+            if(value == false) {
                 dial_g.setEnabled(false);
                 dial_g.setValue((1/dial_alpha.getValue()));
             }
@@ -497,6 +499,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
  
                 
         }
+        reloadIPF();
     }
 
     for (auto* name : textButtons)
@@ -636,6 +639,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     float g_pre_1 = 1;
     float g_pre_2 = 1;
     float g_plus = 0;
+
     
     float gs = alphaVal + betaVal + gammaVal;
     
@@ -665,11 +669,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             if (!std::isfinite(g_plus)) {
                 return nullVector;
             }
-            
-            //Werte nach hinten rücken
-            g_pre_2 = g_pre_1;
-            g_pre_1 = g;
-            g = g_plus;
+        
             
             // Neuen Wert dem Array hinzufügen
             g_array.push_back(g_plus);
@@ -677,12 +677,13 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             
             // Normiere Wert und füge sie einem Array hinzu
             float g_plus_norm = ((g_plus) / gs) - 1;
-            float g_norm = ((g) / gs) - 1;
+            float g_norm = (g / gs) - 1;
             g_plus_normed_array.push_back(g_plus_norm);
+
             
             // Berechne Werte Differenz
-            float g_delta = abs(g_norm - g_plus_norm) / 2;
-            
+            float g_delta = abs(g - g_plus) * dial_freqmod.getValue();
+
             //Berechne Phaseshift
             float shift = g_delta;
             float phaseShift;
@@ -690,7 +691,9 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
                 phaseShift = 1 - abs(shift);
             else
                 phaseShift = shift;
-            phaseshift_array.push_back(phaseShift);
+            
+            
+            phaseshift_array.push_back(g_delta);
             
             //normierten Zustand mit Faktor vom Regler verrechnen
             g_ampmod = g_plus_norm * dial_ampmod.getValue();
@@ -698,36 +701,55 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             //Wieder zu ursprünglicher Form bringen
             g_signalmod = (g_ampmod + 1) * gs;
             g_ampmod_array.push_back(g_signalmod);
+            
+            //Werte nach hinten rücken
+            g_pre_2 = g_pre_1;
+            g_pre_1 = g;
+            g = g_plus;
         }
+        
         //output = g_ampmod_array;
         
         if (calcSignal == true) {
-            std::vector<float> wt = wtg.generateWaveTable(audioProcessor.chosenWavetable);
             float sample;
-            for (int i = 0; i < g_ampmod_array.size(); ++i) {
-                float value = g_ampmod_array[i];
-
-                //Alle Werte der Phase mit dem Wert verrechnen
-                for (int p = 0; p < wt.size(); p++) {
-                    sample = abs(value) * wt[p];
-                    signal_ampmod_array.push_back(sample);
-                }
-            }
+            std::vector<float> wt = wtg.generateWaveTable(audioProcessor.chosenWavetable);
             
+            std::vector<float> used_vector = g_ampmod_array;
+
+           
+            for (int i = 0; i < used_vector.size(); ++i) {
+                float value = used_vector[i];
+                
+                if(toggle_freqmod.getToggleState()== true) {
+                    wt = interpolateArray(wt, 64 + 30 * phaseshift_array[i]);
+                    //DBG(phaseshift_array[i]);
+                }
+                
+                if(toggle_ampmod.getToggleState() == true) {
+                    //Alle Werte der Phase mit dem Wert verrechnen
+                    for (int p = 0; p < wt.size(); p++) {
+                        sample = abs(value) * wt[p];
+                        signal_ampmod_array.push_back(sample);
+                    }
+                }
+                else {
+                    //Alle Werte der Phase mit dem Wert verrechnen
+                    for (int p = 0; p < wt.size(); p++) {
+                        sample = wt[p];
+                        signal_ampmod_array.push_back(sample);
+                    }
+                }
+                
+            }
             output = signal_ampmod_array;
         }
-        
-        else if (calcSignal == false) {
+    
+        else {
             for (int i = max_iterations; i < 6400; ++i) {
                 g_ampmod_array.push_back(0);
             }
-            
             output = g_ampmod_array;
         }
-        //else
-            //output = modified_interp;
-
-        //return output;
     }
     else {
         return nullVector;
@@ -871,7 +893,7 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
         }
     }
     */
-
+    /*
     for (const auto& value : behaviour) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
         if (value == 0)
@@ -882,9 +904,13 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
             colours.add(Colours::blueviolet); // Markiere den Wert als grün
         else if (value == 3)
             colours.add(Colours::black); // Markiere den Wert als grün
-        
     }
-
+     */
+    for (const auto& value : percentage) {
+        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
+            colours.add(Colour::fromRGBA(25, 190, 0, (value / 100) * 255)); // Markiere den Wert als rot
+    }
+    
     return colours;
 }
 
@@ -905,7 +931,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
     percentage = result.second;
     betaColours = generateColors(behaviour, percentage);
     
-    result = getBetaPercentage(alphaval, betaval);
+    result = getGammaPercentage(alphaval, betaval);
     behaviour = result.first;
     percentage = result.second;
     gammaColours = generateColors(behaviour, percentage);
@@ -913,12 +939,38 @@ void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
 
 
 
-double IPFSynthesizerVSTAudioProcessorEditor::roundToTwoDecimalPlaces(double value) {
-    double roundedValue = std::round(value * 100) / 100;
+float IPFSynthesizerVSTAudioProcessorEditor::roundToTwoDecimalPlaces(float value) {
+    float roundedValue = std::round(value * 100) / 100;
     return roundedValue;
 }
 
 void IPFSynthesizerVSTAudioProcessorEditor::reloadIPF() {
-    yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
+    yData[0] = calculateIPF(dial_g.getValue(), dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
     plot.plot(yData); // Plot using time values on x-axis
+}
+
+// Lineare Interpolationsfunktion
+float IPFSynthesizerVSTAudioProcessorEditor::linearInterpolation(float x, float x0, float y0, float x1, float y1) {
+    return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+}
+
+// Funktion zum Stauchen oder Strecken des Arrays mit Interpolation
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::interpolateArray(const std::vector<float>& inputArray, int newLength) {
+    std::vector<float> resultArray(newLength);
+
+    float scaleX = static_cast<float>(inputArray.size() - 1) / (newLength - 1);
+
+    for (int i = 0; i < newLength; ++i) {
+        float x = i * scaleX;
+        int x0 = static_cast<int>(x);
+        int x1 = x0 + 1;
+
+        if (x1 >= inputArray.size()) {
+            resultArray[i] = inputArray.back(); // Der letzte Wert wird für Werte außerhalb des ursprünglichen Arrays verwendet
+        } else {
+            resultArray[i] = linearInterpolation(x, x0, inputArray[x0], x1, inputArray[x1]);
+        }
+    }
+
+    return resultArray;
 }
