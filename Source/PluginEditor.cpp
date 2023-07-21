@@ -46,10 +46,10 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
 
     //IPF-Parameter Init
     dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 5, 0.01);
-    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50, 0, 100, 1);
+    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50, 0, 1, 0.01);
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43, 0, 100, 0.1);
-    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 3);
+    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43, 0, 1, 0.01);
+    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 3, 0, 1, 0.01);
 
     //Toggle Init
     toggle_init(toggle_bypass);
@@ -101,7 +101,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     // Set Plot Parameters
     //plot.xLim(0, 500);
     plotSignal = false;
-    yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
+    yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
     plot.yLim(-2, 2);
     plot.xLim(0, 100);
     plot.plot(yData);
@@ -113,7 +113,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     setLookAndFeel(&claf);
 
 
-    const char* txtData = reinterpret_cast<const char*>(BinaryData::results_abg_csv);
+    const char* txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
     readCSVFromString(txtData);
 
     audioProcessor.chosenWavetable = "sine";
@@ -188,7 +188,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     // Größe und Position des Kreises
     int diameter = 67;
     // Zeichne den Kreis mit den Bereichen
-    //drawColorfulCircle(g, 350, 406, diameter, alphaColours);
+    drawColorfulCircle(g, dial_alpha.getBounds().getX()+45, 406, diameter, alphaColours);
     drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
     drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
     
@@ -432,7 +432,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     //}
     
     if(toggle_fixstate.getToggleState() == true)
-        dial_g.setValue((dial_alpha.getValue() + dial_beta.getValue() + dial_gamma.getValue())/100);
+        dial_g.setValue((1/dial_alpha.getValue()));
 
 
     std::vector<float> yArray = yData[0];
@@ -447,8 +447,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     }
 
     if (setupDone) {
-        yData[0] = calculateIPF(dial_g.getValue( ), dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
-        plot.plot(yData);
+        reloadIPF();
     }
 }
 
@@ -489,7 +488,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
             //audioProcessor.freqMod = value;
             if(value == true) {
                 dial_g.setEnabled(false);
-                dial_g.setValue((dial_alpha.getValue() + dial_beta.getValue() + dial_gamma.getValue())/100);
+                dial_g.setValue((1/dial_alpha.getValue()));
             }
             else {
                 dial_g.setEnabled(true);
@@ -535,17 +534,16 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                     }
                     else {
                         plotSignal = false;
-                        plot.xLim(-3.5, 104);
+                        plot.xLim(0, 104);
                         plot.yLim(-2, 2);
-
                     }
+                    reloadIPF();
                 }
 
                 previousBtn = btn;
 
             }
-            yData[0] = calculateIPF(1, dial_alpha.getValue() / 100, dial_beta.getValue() / 100, dial_gamma.getValue() / 100, plotSignal);
-            plot.plot(yData); // Plot using time values on x-axis
+            reloadIPF();
         }
     }
 }
@@ -633,100 +631,107 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::arange(float start, fl
 
 std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal)
 {
-    float state = gVal;
-    float g_pre = state;
-    float g_pre_2 = state;
+    float g0 = gVal;
+    float g = g0;
+    float g_pre_1 = 1;
+    float g_pre_2 = 1;
+    float g_plus = 0;
+    
     float gs = alphaVal + betaVal + gammaVal;
-    float gdiff = 1 - gs;
-    float g_min = gs - gdiff;
-    float g_max = state;
-
-    float g_delta;
-    float g_mapped;
-    float g_plus_mapped;
+    
     float g_ampmod;
     float g_signalmod;
-    float phaseShift;
+    
 
 
     std::vector<float> g_array;
-    std::vector<float> g_mod;
+    std::vector<float> g_plus_normed_array;
+    std::vector<float> g_ampmod_array;
+    std::vector<float> signal_ampmod_array;
     std::vector<float> g_interp;
     std::vector<float> modified_interp; // Neues Array für den modifizierten Output
-    std::vector<float> phaseshifts;
+    std::vector<float> phaseshift_array;
     std::vector<float> output;
+    std::vector<float> nullVector(500, 0);
 
-    float g_plus = gVal;
-
-    int max_iterations = 300;  // Maximale Anzahl von Iterationen
-
-    for (int iteration = 0; iteration < max_iterations; ++iteration) {
-        // Berechnung der nächsten Iteration des g-Werts
-        g_plus = state - std::log((1 / alphaVal) * (state - (betaVal * std::exp(state - g_pre) + gammaVal * std::exp(state - g_pre_2))));
-        g_pre_2 = g_pre;
-        g_pre = state;
-        state = g_plus;
-        
-        if (!std::isfinite(state)) {
-            //g_array.clear();
-            //g_array.resize(max_iterations, 0.0f);
-            state = gs;
-            //break;
-        }
-
-        
-        float g_norm = state / gs;
-        //g_mapped = g_norm - 1;
-        g_mapped = state;
-
-        float g_plus_norm = g_plus / gs;
-        g_plus_mapped = g_plus_norm - 1;
-
-        float shift = g_delta = abs(g_plus_mapped - g_mapped) / 2;
-
-        if ( shift <= 0)
-            phaseShift = 1 - abs(shift);
-        else
-            phaseShift = shift;
-
-        phaseshifts.push_back(phaseShift);
-        g_ampmod = g_mapped * dial_ampmod.getValue();
-        g_signalmod = (g_ampmod + 1);
-        g_mod.push_back(g_ampmod);
-        g_array.push_back(g_signalmod);
-
-        
-
-        // Überprüfung auf ungültigen Wert
-        
-    }
-
-    if (calcSignal == true) {
-        
-        std::vector<float> sine = wtg.generateWaveTable(audioProcessor.chosenWavetable);
-        float signal;
-        for (int i = 0; i < g_array.size(); ++i) {
-            float value = g_array[i];
-
-            //Alle Werte der Phase mit dem Wert verrechnen
-            for (int p = 0; p < sine.size(); p++) {
-                signal = value * sine[p];
-                modified_interp.push_back(signal);
-            }
-
-        }
-    }
     
-    if (calcSignal == false) {
-        for (int i = max_iterations; i < 6400; ++i) {
-            g_array.push_back(0);
+    int max_iterations = 300;  // Maximale Anzahl von Iterationen
+    if(alphaVal != 0 and g != 0) {
+        for (int iteration = 0; iteration < max_iterations; ++iteration) {
+            
+            g_plus = g - std::log((1 / alphaVal) * (g - (betaVal * std::exp(g - g_pre_1) + gammaVal * std::exp(g - g_pre_2))));
+            
+            //Prüfen ob Zahl komplex ist
+            if (!std::isfinite(g_plus)) {
+                return nullVector;
+            }
+            
+            //Werte nach hinten rücken
+            g_pre_2 = g_pre_1;
+            g_pre_1 = g;
+            g = g_plus;
+            
+            // Neuen Wert dem Array hinzufügen
+            g_array.push_back(g_plus);
+            
+            
+            // Normiere Wert und füge sie einem Array hinzu
+            float g_plus_norm = ((g_plus) / gs) - 1;
+            float g_norm = ((g) / gs) - 1;
+            g_plus_normed_array.push_back(g_plus_norm);
+            
+            // Berechne Werte Differenz
+            float g_delta = abs(g_norm - g_plus_norm) / 2;
+            
+            //Berechne Phaseshift
+            float shift = g_delta;
+            float phaseShift;
+            if ( shift <= 0)
+                phaseShift = 1 - abs(shift);
+            else
+                phaseShift = shift;
+            phaseshift_array.push_back(phaseShift);
+            
+            //normierten Zustand mit Faktor vom Regler verrechnen
+            g_ampmod = g_plus_norm * dial_ampmod.getValue();
+            
+            //Wieder zu ursprünglicher Form bringen
+            g_signalmod = (g_ampmod + 1) * gs;
+            g_ampmod_array.push_back(g_signalmod);
+        }
+        //output = g_ampmod_array;
+        
+        if (calcSignal == true) {
+            std::vector<float> wt = wtg.generateWaveTable(audioProcessor.chosenWavetable);
+            float sample;
+            for (int i = 0; i < g_ampmod_array.size(); ++i) {
+                float value = g_ampmod_array[i];
+
+                //Alle Werte der Phase mit dem Wert verrechnen
+                for (int p = 0; p < wt.size(); p++) {
+                    sample = abs(value) * wt[p];
+                    signal_ampmod_array.push_back(sample);
+                }
+            }
+            
+            output = signal_ampmod_array;
         }
         
-        output = g_mod;
-    }    
-    else
-        output = modified_interp;
+        else if (calcSignal == false) {
+            for (int i = max_iterations; i < 6400; ++i) {
+                g_ampmod_array.push_back(0);
+            }
+            
+            output = g_ampmod_array;
+        }
+        //else
+            //output = modified_interp;
 
+        //return output;
+    }
+    else {
+        return nullVector;
+    }
     return output;
 }
 
@@ -768,8 +773,10 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
     std::vector<float> alpha;
     std::vector<float> beta;
     std::vector<float> gamma;
+    std::vector<float> behaviour;
+    std::vector<float> percent;
     std::vector<float> iterations;
-
+    
     std::istringstream iss(dataString);
     std::string line;
     // Überspringe die erste Zeile (Header)
@@ -784,64 +791,74 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
         std::getline(ss, cell, ';');
         gamma.push_back(std::stof(cell));
         std::getline(ss, cell, ';');
-        iterations.push_back(std::stof(cell));
+        behaviour.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        percent.push_back(std::stof(cell));
     }
 
     csvAlpha = alpha;
     csvBeta = beta;
     csvGamma = gamma;
-    csvIterations = iterations;
+    csvBehaviour = behaviour;
+    csvPercent = percent;
 
     // Gib die Vektoren zurück
-    return static_cast<void>(alpha), static_cast<void>(beta), static_cast<void>(gamma), iterations;
+    return alpha;
 }
 
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getAlphaIterations(float targetBeta, float targetGamma)
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getAlphaPercentage(float targetBeta, float targetGamma)
 {
-    std::vector<float> iterations;
-    float beta = roundToTwoDecimalPlaces(targetBeta / 100);
-    float gamma = roundToTwoDecimalPlaces(targetGamma / 100);
+    std::vector<float> percentage;
+    std::vector<float> behaviour;
+    
+    float beta = roundToTwoDecimalPlaces(targetBeta);
+    float gamma = roundToTwoDecimalPlaces(targetGamma);
 
     for (size_t i = 0; i < csvAlpha.size(); i++) {
         if (csvBeta[i] == beta && csvGamma[i] == gamma) {
-            iterations.push_back(csvIterations[i]);
+            percentage.push_back(csvPercent[i]);
+            behaviour.push_back(csvBehaviour[i]);
         }
     }
 
-    return iterations;
+    return make_pair(behaviour, percentage);
 }
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getBetaIterations(float targetAlpha, float targetGamma) {
-    std::vector<float> iterations;
-    float alpha = roundToTwoDecimalPlaces(targetAlpha/100);
-    float gamma = roundToTwoDecimalPlaces(targetGamma/100);
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getBetaPercentage(float targetAlpha, float targetGamma) {
+    std::vector<float> percentage;
+    std::vector<float> behaviour;
+    float alpha = roundToTwoDecimalPlaces(targetAlpha);
+    float gamma = roundToTwoDecimalPlaces(targetGamma);
 
     for (size_t i = 0; i < csvAlpha.size(); i++) {
         if (csvAlpha[i] == alpha && csvGamma[i] == gamma) {
-            iterations.push_back(csvIterations[i]);
+            percentage.push_back(csvPercent[i]);
+            behaviour.push_back(csvBehaviour[i]);
         }
     }
 
-    return iterations;
+    return std::make_pair(behaviour, percentage);
 }
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::getGammaIterations(float targetAlpha, float targetBeta)
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getGammaPercentage(float targetAlpha, float targetBeta)
 {
-    std::vector<float> iterations;
-    float alpha = roundToTwoDecimalPlaces(targetAlpha/100);
-    float beta = roundToTwoDecimalPlaces(targetBeta/100);
+    std::vector<float> percentage;
+    std::vector<float> behaviour;
+    float alpha = roundToTwoDecimalPlaces(targetAlpha);
+    float beta = roundToTwoDecimalPlaces(targetBeta);
 
     for (size_t i = 0; i < csvAlpha.size(); i++) {
         if (csvAlpha[i] == alpha && csvBeta[i] == beta) {
-            iterations.push_back(csvIterations[i]);
+            percentage.push_back(csvPercent[i]);
+            behaviour.push_back(csvBehaviour[i]);
         }
     }
 
-    return iterations;
+    return std::make_pair(behaviour, percentage);
 }
 
-Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::vector<float>& iterations) {
+Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::vector<float>& behaviour, const std::vector<float>& percentage) {
     Array<Colour> colours;
     /*
     for (const auto& value : iterations) {
@@ -855,16 +872,16 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
     }
     */
 
-    for (const auto& value : iterations) {
+    for (const auto& value : behaviour) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
         if (value == 0)
             colours.add(Colours::orangered); // Markiere den Wert als rot
         else if (value == 1)
-            colours.add(Colours::orange); // Markiere den Wert als grün
-        else if (value == 2)
             colours.add(Colours::forestgreen); // Markiere den Wert als grün
-        else if (value == 3)
+        else if (value == 2)
             colours.add(Colours::blueviolet); // Markiere den Wert als grün
+        else if (value == 3)
+            colours.add(Colours::black); // Markiere den Wert als grün
         
     }
 
@@ -875,14 +892,23 @@ void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
     float alphaval = dial_alpha.getValue();
     float betaval = dial_beta.getValue();
     float gammaval = dial_gamma.getValue();
-    std::vector<float> iterations;
-
-    //iterations = getAlphaIterations(betaval, gammaval);
-    //alphaColours = generateColors(iterations);
-    iterations = getBetaIterations(alphaval, gammaval);
-    betaColours = generateColors(iterations);
-    iterations = getGammaIterations(alphaval, betaval);
-    gammaColours = generateColors(iterations);
+    std::vector<float> behaviour;
+    std::vector<float> percentage;
+    
+    auto result = getAlphaPercentage(betaval, gammaval);
+    behaviour = result.first;
+    percentage = result.second;
+    alphaColours = generateColors(behaviour, percentage);
+    
+    result = getBetaPercentage(alphaval, gammaval);
+    behaviour = result.first;
+    percentage = result.second;
+    betaColours = generateColors(behaviour, percentage);
+    
+    result = getBetaPercentage(alphaval, betaval);
+    behaviour = result.first;
+    percentage = result.second;
+    gammaColours = generateColors(behaviour, percentage);
 }
 
 
@@ -890,4 +916,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
 double IPFSynthesizerVSTAudioProcessorEditor::roundToTwoDecimalPlaces(double value) {
     double roundedValue = std::round(value * 100) / 100;
     return roundedValue;
+}
+
+void IPFSynthesizerVSTAudioProcessorEditor::reloadIPF() {
+    yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
+    plot.plot(yData); // Plot using time values on x-axis
 }

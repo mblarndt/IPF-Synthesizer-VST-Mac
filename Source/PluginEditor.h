@@ -20,6 +20,7 @@
 #include <sstream>
 #include <vector>
 #include "WavetableGenerator.h"
+#include <complex.h>
 
 using namespace juce;
 
@@ -110,7 +111,9 @@ private:
     std::vector<float> csvAlpha;
     std::vector<float> csvBeta;
     std::vector<float> csvGamma;
-    std::vector<float> csvIterations;
+    std::vector<float> csvBehaviour;
+    std::vector<float> csvPercent;
+    std::vector<float> csvIteration;
 
     Array<Colour> alphaColours;
     Array<Colour> betaColours;
@@ -150,15 +153,17 @@ private:
 
     std::vector<float> readCSVFromString(const std::string& dataString);
 
-    std::vector<float> getAlphaIterations(float targetBeta, float targetGamma);
-    std::vector<float> getBetaIterations(float targetAlpha, float targetGamma);
-    std::vector<float> getGammaIterations(float targetAlpha, float targetBeta);
+    std::pair<std::vector<float>, std::vector<float>> getAlphaPercentage(float targetBeta, float targetGamma);
+    std::pair<std::vector<float>, std::vector<float>> getBetaPercentage(float targetAlpha, float targetGamma);
+    std::pair<std::vector<float>, std::vector<float>> getGammaPercentage(float targetAlpha, float targetBeta);
 
-    Array<Colour> generateColors(const std::vector<float>& iterations);
+    Array<Colour> generateColors(const std::vector<float>& behaviour, const std::vector<float>& percentage);
 
     void updateCircleColors();
 
     double roundToTwoDecimalPlaces(double value);
+    
+    void reloadIPF();
 
 
 
