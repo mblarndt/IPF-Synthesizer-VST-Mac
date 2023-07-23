@@ -17,13 +17,15 @@ using namespace std;
 class WaveTableGenerator
 {
 public:
-    vector<float> generateWaveTable(juce::String type);
+    vector<float> generateWaveTable(juce::String type, float phase = 0);
 
-    vector<float> generateSineWaveTable();
+    vector<float> generateSineWaveTable(float phase = 0);
 
-    vector<float> generateSawtoothWaveTable();
+    vector<float> generateSawtoothWaveTable(float phase = 0);
 
-    vector<float> generateTriangleWaveTable();
+    vector<float> generateTriangleWaveTable(float phase = 0);
 
-    vector<float> generateSquareWaveTable();
+    vector<float> generateSquareWaveTable(float phase = 0);
+    
+    vector<float> generateSinusWave(double amplitude = 1, double phase = 0);
 };

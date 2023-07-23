@@ -7,7 +7,9 @@
 WavetableOscillator::WavetableOscillator(std::vector<float> waveTable, double sampleRate)
     : waveTable{ std::move(waveTable) },
     sampleRate{ sampleRate }
-{}
+{
+    g_delta = 0;
+}
 
 float WavetableOscillator::getSample()
 {
@@ -18,17 +20,29 @@ float WavetableOscillator::getSample()
     index = index + (waveTable.size());
     index = std::fmod(index, wavetableSize);
     auto originalSample = interpolateLinearly();
+    
+    
+    if(freqMod == true) {
+        //float frequency = currentFrequency +  100 * g_delta * freqmod;
+        float frequency = 1/((1 / currentFrequency) * (1+(g_delta * freqmod)));
+        //float frequency = 1 / ((1 / currentFrequency) * abs(g / g_plus));
+        
+        indexIncrement = frequency  * static_cast<float>(waveTable.size()) / static_cast<float>(sampleRate);
+        //desiredPeriodCount = round(sampleRate / (1 / currentFrequency) * (1 + g_delta * freqmod));
+        desiredPeriodCount = round(sampleRate / frequency);
+    }
+    
+    
     index += indexIncrement;
-
+    
     ++sampleCounter;
     //desiredPeriodCount = desiredPeriodCount * 0.5;
-    if (sampleCounter >= (desiredPeriodCount * ipf_rate))
+    
+    //Clock to trigger IPF
+    if (sampleCounter >= (desiredPeriodCount))
     {
-
         calculate_amp();
-
         sampleCounter = 0;
-        
     }
     
     auto sample = originalSample;
@@ -37,14 +51,30 @@ float WavetableOscillator::getSample()
         // Phasenverschobenes Sample generieren
         auto phaseShiftedSample = interpolateLinearlyWithPhaseShift(phaseShift * phasemod);
         // Kombinierte Samples
-        sample = originalSample + phaseShiftedSample;
+        sample = (originalSample / 2) + (phaseShiftedSample / 2);
     }
+    
+    /*
+    if(fadeCounter < 1000) {
+        sample = sample * (fadeCounter / 1000);
+        fadeCounter = fadeCounter + 1;
+    }
+    */
     
     if (ampMod == true)
         sample *= amplitude;
+    
+    
+    //Prüfen ob Zahl komplex ist
+    if (!std::isfinite(sample)) {
+        return 0;
+    }
+     
+    
+    float compressed_sample = helper.compressSample(sample);
 
 
-    return sample;
+    return compressed_sample;
 }
 
 float WavetableOscillator::interpolateLinearly() const
@@ -71,17 +101,20 @@ float WavetableOscillator::interpolateLinearlyWithPhaseShift(float phaseOffset) 
 
 void WavetableOscillator::setPhaseShift(float shift)
 {
+    
     //Nimmt Werte von -1 bis 1
     if (shift <= 0)
         phaseShift = 1 - abs(shift);
     else
         phaseShift = shift;
     //DBG(phaseShift);
+     
 }
 
 
 void WavetableOscillator::setFrequency(float frequency)
 {
+    currentFrequency = frequency;
     indexIncrement = frequency * static_cast<float>(waveTable.size())
         / static_cast<float>(sampleRate);
     desiredPeriodCount = round(sampleRate / frequency);
@@ -130,10 +163,12 @@ void WavetableOscillator::resetIPF()
     g_delta = 0;
     amplitude = 0;
     ipf_counter = 0;
+    fadeCounter = 0;
 }
 
 float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2)
 {
+    DBG(alpha);
     float g_pl;
     switch(ipf_counter) {
 
@@ -146,6 +181,12 @@ float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, fl
     }
     ipf_counter++;
     
+    /*
+    //Prüfen ob Zahl komplex ist
+    if (!std::isfinite(g_pl)) {
+        g_pl = 0;
+    }
+    */
     return g_pl;
 }
 
@@ -157,21 +198,18 @@ float WavetableOscillator::calculate_amp()
     
     //const float g_mapped = remap(g, alpha, beta, gamma);
     float gs = alpha + beta + gamma;
-    const float g_mapped = (g / gs) -  1;
+    float g_mapped = (g / gs) -  1;
+    const float g_plus_mapped = (g_plus / gs) - 1;
+    g_delta = abs(g - g_plus);
     
     g = g_plus;
     
-    //const float g_plus_mapped = remap(g_plus, alpha, beta, gamma);
-    const float g_plus_mapped = (g_plus / gs) - 1;
     
-    g_delta = abs(g_plus_mapped -g_mapped);
-    g_delta = g_delta * phasemod;
-
-    setPhaseShift(g_delta);
+    //setPhaseShift(g_delta);
+    phaseShift = helper.calculatePhaseshift(g_delta);
+    
     float signalmod = g_plus_mapped * ampmod;
-    amplitude = abs(signalmod + 1);
-
-    //DBG(amplitude);
+    amplitude = (signalmod + 1) * gs;
 
     return amplitude;
 }
@@ -183,19 +221,19 @@ void WavetableOscillator::setG(float newG)
 
 void WavetableOscillator::setAlpha(float newAlpha)
 {
-    alpha = newAlpha / 100;
+    alpha = round(newAlpha*100)/100;
     //DBG("Alpha" + String(alpha));
 }
 
 void WavetableOscillator::setBeta(float newBeta)
 {
-    beta = (newBeta / 100);
+    beta = round(newBeta*100)/100;
     //DBG("Beta" + String(beta));
 }
 
 void WavetableOscillator::setGamma(float newGamma)
 {
-    gamma = (newGamma / 100);
+    gamma = round(newGamma*100)/100;
     //DBG("Gamma" + String(gamma));
 }
 

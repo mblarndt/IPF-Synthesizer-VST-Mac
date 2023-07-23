@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "HelperFunctions.h"
 
 class WavetableOscillator
 {
@@ -36,6 +37,7 @@ public:
     bool phaseMod;
     bool ampMod;
     bool freqMod;
+    bool fixedG;
     float ampmod;
     float phasemod;
     float freqmod;
@@ -74,4 +76,9 @@ private:
     float indexIncrement = 0.f;
     std::vector<float> waveTable;
     double sampleRate;
+    
+    float currentFrequency;
+    float fadeCounter = 0;
+    
+    HelperFunctions helper;
 };

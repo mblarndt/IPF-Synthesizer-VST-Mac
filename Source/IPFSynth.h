@@ -19,6 +19,7 @@ public:
     bool phaseMod;
     bool ampMod;
     bool freqMod;
+    bool fixedG;
 
     float g_val;
     float alpha_val;

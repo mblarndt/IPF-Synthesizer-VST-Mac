@@ -64,7 +64,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     //Mod-Influence
     dial_init(dial_phasemod, Slider::SliderStyle::Rotary, 1, 0, 2);
     dial_init(dial_ampmod, Slider::SliderStyle::Rotary, 1, 0, 10);
-    dial_init(dial_freqmod, Slider::SliderStyle::Rotary, 1, 0, 10);
+    dial_init(dial_freqmod, Slider::SliderStyle::Rotary, 1, 0, 50, 1);
 
     dial_ampmod.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(0, 0, 0, 0));
     dial_phasemod.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(0, 0, 0, 0));
@@ -87,6 +87,9 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     ampmodAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "ampmod", dial_ampmod);
     phasemodAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "phasemod", dial_phasemod);
     freqmodAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "freqmod", dial_freqmod);
+    ampmodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "ampmodToggle", toggle_ampmod);
+    freqmodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "freqmodToggle", toggle_freqmod);
+    phasemodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "phasemodToggle", toggle_phasemod);
     //rateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "rate", dial_rate);
 
     addAndMakeVisible(plot);
@@ -104,6 +107,8 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
     plot.yLim(-2, 2);
     plot.xLim(0, 100);
+    
+
     plot.plot(yData);
 
 
@@ -192,6 +197,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
     drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
     updateCircleColors();
+
     
 }
 
@@ -324,6 +330,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
+        
 
         audioProcessor.alpha = value;
 
@@ -355,6 +362,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             audioProcessor.gamma = new_gamma_max;
 
         //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
+        if(value <= dial_beta.getValue())
+            dial_alpha.setValue(dial_beta.getValue());
 
         dial_beta.repaint();
         dial_gamma.repaint();
@@ -363,11 +372,13 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
     else if (slider == &dial_beta) {
         //plot.plot(yData);
-
+        
+        
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
-
+        
+        
 
         updateCircleColors();
 
@@ -393,7 +404,6 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             audioProcessor.gamma = new_max - 0.001;
 
         //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
-
         dial_gamma.repaint();
     }
     else if (slider == &dial_gamma) {
@@ -433,8 +443,13 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     //    audioProcessor.ipf_rate = slider->getValue();
     //}
     
-    if(toggle_fixstate.getToggleState() == false)
-        dial_g.setValue((1/dial_alpha.getValue()));
+    if(toggle_fixstate.getToggleState() == false) {
+        // Mindestwert und Maximalwert für die zufällige Zahl
+
+        // Zufallszahlengenerator initialisieren
+        dial_g.setValue(1 / dial_alpha.getValue());
+    }
+        //dial_g.setValue((1/dial_alpha.getValue()));
 
 
     std::vector<float> yArray = yData[0];
@@ -475,6 +490,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         }
         else if (button == &toggle_phasemod) {
             bool value = button->getToggleState();
+            if(value == true)
+                toggle_freqmod.setToggleState(false, sendNotification);
             audioProcessor.phaseMod = value;
         }
         else if (button == &toggle_ampmod) {
@@ -483,6 +500,8 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         }
         else if (button == &toggle_freqmod) {
             bool value = button->getToggleState();
+            if(value == true)
+                toggle_phasemod.setToggleState(false, sendNotification);
             audioProcessor.freqMod = value;
         }
         else if (button == &toggle_fixstate) {
@@ -490,11 +509,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
             //audioProcessor.freqMod = value;
             if(value == false) {
                 dial_g.setEnabled(false);
-                dial_g.setValue((1/dial_alpha.getValue()));
             }
             else {
                 dial_g.setEnabled(true);
             }
+            audioProcessor.fixedG = value;
                 
  
                 
@@ -655,6 +674,7 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     std::vector<float> g_interp;
     std::vector<float> modified_interp; // Neues Array für den modifizierten Output
     std::vector<float> phaseshift_array;
+    std::vector<float> freqshift_array;
     std::vector<float> output;
     std::vector<float> nullVector(500, 0);
 
@@ -677,27 +697,22 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
             
             // Normiere Wert und füge sie einem Array hinzu
             float g_plus_norm = ((g_plus) / gs) - 1;
-            float g_norm = (g / gs) - 1;
             g_plus_normed_array.push_back(g_plus_norm);
 
             
             // Berechne Werte Differenz
-            float g_delta = abs(g - g_plus) * dial_freqmod.getValue();
+            float g_delta = abs(g - g_plus);
+            
+            //Berechne Frequenzmodulation
+            float freqshift = g_delta;
+            freqshift_array.push_back(freqshift);
 
-            //Berechne Phaseshift
-            float shift = g_delta;
-            float phaseShift;
-            if ( shift <= 0)
-                phaseShift = 1 - abs(shift);
-            else
-                phaseShift = shift;
             
-            
-            phaseshift_array.push_back(g_delta);
+            float phaseshift = helper.calculatePhaseshift(g_delta);
+            phaseshift_array.push_back(phaseshift);
             
             //normierten Zustand mit Faktor vom Regler verrechnen
             g_ampmod = g_plus_norm * dial_ampmod.getValue();
-            
             //Wieder zu ursprünglicher Form bringen
             g_signalmod = (g_ampmod + 1) * gs;
             g_ampmod_array.push_back(g_signalmod);
@@ -712,31 +727,54 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
         
         if (calcSignal == true) {
             float sample;
-            std::vector<float> wt = wtg.generateWaveTable(audioProcessor.chosenWavetable);
             
-            std::vector<float> used_vector = g_ampmod_array;
+            std::vector<float> wt = wtg.generateWaveTable(audioProcessor.chosenWavetable);
+            std::vector<float> wt_phasemod;
+            std::vector<float> wt_freqemod;
+            std::vector<float> active_wt = wt;
+            std::vector<float> used_vector;
+            
 
-           
-            for (int i = 0; i < used_vector.size(); ++i) {
-                float value = used_vector[i];
+            for (int i = 0; i < g_ampmod_array.size(); ++i) {
+                float value = g_ampmod_array[i];
+                
+                
+                if (toggle_phasemod.getToggleState() == true) {
+                    wt_phasemod = wtg.generateSinusWave(1, phaseshift_array[i] * 10 *  dial_phasemod.getValue());
+                }
                 
                 if(toggle_freqmod.getToggleState()== true) {
-                    wt = interpolateArray(wt, 64 + 30 * phaseshift_array[i]);
-                    //DBG(phaseshift_array[i]);
+                    wt_freqemod = interpolateArray(wt, wt.size() + (1 + phaseshift_array[i] * dial_freqmod.getValue()));
+                    active_wt = wt_freqemod;
                 }
                 
                 if(toggle_ampmod.getToggleState() == true) {
                     //Alle Werte der Phase mit dem Wert verrechnen
-                    for (int p = 0; p < wt.size(); p++) {
-                        sample = abs(value) * wt[p];
-                        signal_ampmod_array.push_back(sample);
+                    for (int p = 0; p < active_wt.size(); p++) {
+                        
+                        if (toggle_phasemod.getToggleState() == true) {
+                            sample = abs(value) * (active_wt[p] / 2) + (wt_phasemod[p] / 2);
+                        }
+                        else {
+                            sample = abs(value) * active_wt[p];
+                        }
+                        //Compress if over Theshold of over 0.95
+                        float compressed_sample = helper.compressSample(sample);
+                        signal_ampmod_array.push_back(compressed_sample);
                     }
                 }
                 else {
-                    //Alle Werte der Phase mit dem Wert verrechnen
-                    for (int p = 0; p < wt.size(); p++) {
-                        sample = wt[p];
-                        signal_ampmod_array.push_back(sample);
+                    //Alle Samples entsprechen dem wavetable
+                    for (int p = 0; p < active_wt.size(); p++) {
+                        if (toggle_phasemod.getToggleState() == true) {
+                            sample = (wt[p] / 2) + (wt_phasemod[p] / 2);
+                        }
+                        else {
+                            sample = active_wt[p];
+                        }
+                        //Compress if over Theshold of over 0.95
+                        float compressed_sample = helper.compressSample(sample);
+                        signal_ampmod_array.push_back(compressed_sample);
                     }
                 }
                 
@@ -893,7 +931,7 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
         }
     }
     */
-    /*
+    
     for (const auto& value : behaviour) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
         if (value == 0)
@@ -905,12 +943,12 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
         else if (value == 3)
             colours.add(Colours::black); // Markiere den Wert als grün
     }
-     */
+     /*
     for (const auto& value : percentage) {
         // Überprüfe, ob der Wert über 300 oder unter 10 liegt
             colours.add(Colour::fromRGBA(25, 190, 0, (value / 100) * 255)); // Markiere den Wert als rot
     }
-    
+    */
     return colours;
 }
 

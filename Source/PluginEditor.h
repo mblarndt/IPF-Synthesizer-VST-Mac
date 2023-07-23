@@ -21,6 +21,8 @@
 #include <vector>
 #include "WavetableGenerator.h"
 #include <complex.h>
+#include "HelperFunctions.h"
+#include <random>
 
 using namespace juce;
 
@@ -87,6 +89,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> ampmodAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> phasemodAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqmodAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> ampmodToggleAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> freqmodToggleAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> phasemodToggleAttachment;
     
     Path waveTablePath;
 
@@ -128,6 +133,8 @@ private:
 
     CustomLookAndFeel claf;
     WaveTableGenerator wtg;
+    HelperFunctions helper;
+    
 
     void dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue ,int min = 0, int max = 100, float steps = 0.01);
     void button_init(juce::TextButton& name, String& button_text);

@@ -73,6 +73,7 @@ public:
     bool phaseMod;
     bool ampMod;
     bool freqMod;
+    bool fixedG;
     float ampmod;
     float phasemod;
     float freqmod;
@@ -84,6 +85,7 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
     void addSliderParameter(String id, String name, NormalisableRange<float> range, float initialValue);
+    void addToggleParameter(String id, String name, bool initialValue);
 
 private:
     

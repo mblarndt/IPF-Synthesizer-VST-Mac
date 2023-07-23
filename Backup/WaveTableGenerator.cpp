@@ -10,37 +10,41 @@
 
 #include "WaveTableGenerator.h"
 
-vector<float> WaveTableGenerator::generateWaveTable(juce::String type, float phase)
-{
+vector<float> WaveTableGenerator::generateWaveTable(juce::String type)
+{  
     vector<float> waveTable;
 
     if (type == "sine")
-        waveTable = generateSineWaveTable(phase);
+        waveTable = generateSineWaveTable(0);
     else if (type == "saw")
-        waveTable = generateSawtoothWaveTable(phase);
+        waveTable = generateSawtoothWaveTable();
     else if (type == "triangle")
-        waveTable = generateTriangleWaveTable(phase);
-    else if (type == "square")
-        waveTable = generateSquareWaveTable(phase);
+        waveTable = generateTriangleWaveTable();
+    else if (type == "square") 
+        waveTable = generateSquareWaveTable();
 
     return waveTable;
 }
 
-vector<float> WaveTableGenerator::generateSineWaveTable(float phase)
+std::vector<float> generateSineWaveTable(float phaseshift)
 {
     constexpr auto WAVETABLE_LENGTH = 64;
     const auto PI = std::atanf(1.f) * 4;
-    std::vector<float> sineWaveTable = std::vector<float>(WAVETABLE_LENGTH);
+    std::vector<float> sineWaveTable(WAVETABLE_LENGTH);
 
     for (auto i = 0; i < WAVETABLE_LENGTH; ++i)
     {
-        sineWaveTable[i] = std::sinf(2 * PI * static_cast<float>(i) / WAVETABLE_LENGTH);
+        float phase = 2 * PI * static_cast<float>(i) / WAVETABLE_LENGTH;
+        // Phasenverschiebung anwenden
+        phase += phaseshift * 2 * PI;
+
+        sineWaveTable[i] = std::sinf(phase);
     }
 
     return sineWaveTable;
 }
 
-std::vector<float> WaveTableGenerator::generateSawtoothWaveTable(float phase)
+std::vector<float> WaveTableGenerator::generateSawtoothWaveTable()
 {
     constexpr auto WAVETABLE_LENGTH = 64;
     std::vector<float> sawtoothWaveTable = std::vector<float>(WAVETABLE_LENGTH);
@@ -53,7 +57,7 @@ std::vector<float> WaveTableGenerator::generateSawtoothWaveTable(float phase)
     return sawtoothWaveTable;
 }
 
-std::vector<float> WaveTableGenerator::generateTriangleWaveTable(float phase)
+std::vector<float> WaveTableGenerator::generateTriangleWaveTable()
 {
     constexpr auto WAVETABLE_LENGTH = 64;
     const auto PI = std::atanf(1.f) * 4;
@@ -69,7 +73,7 @@ std::vector<float> WaveTableGenerator::generateTriangleWaveTable(float phase)
 }
 
 
-std::vector<float> WaveTableGenerator::generateSquareWaveTable(float phase)
+std::vector<float> WaveTableGenerator::generateSquareWaveTable()
 {
     constexpr auto WAVETABLE_LENGTH = 64;
     std::vector<float> squareWaveTable = std::vector<float>(WAVETABLE_LENGTH);
@@ -83,18 +87,4 @@ std::vector<float> WaveTableGenerator::generateSquareWaveTable(float phase)
 
     return squareWaveTable;
 
-}
-
-std::vector<float> WaveTableGenerator::generateSinusWave(double amplitude, double phase) {
-    const int numSamples = 64;
-    const auto PI = std::atanf(1.f) * 4;
-    std::vector<float> waveform;
-
-    for (int i = 0; i < numSamples; ++i) {
-        double t = static_cast<double>(i) / numSamples; // Time in the range [0, 1]
-        float value = static_cast<float>(amplitude * sin(2 * PI * t + phase));
-        waveform.push_back(value);
-    }
-
-    return waveform;
 }

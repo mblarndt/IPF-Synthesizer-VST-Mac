@@ -5,11 +5,15 @@
               companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
-      <FILE id="P2NOPg" name="results_percentage.csv" compile="0" resource="1"
+      <FILE id="WBr8Fp" name="results_percentage.csv" compile="0" resource="1"
             file="Source/data/results_percentage.csv"/>
-      <FILE id="IjHEqD" name="WaveTableGenerator.cpp" compile="1" resource="0"
+      <FILE id="eQdrvo" name="HelperFunctions.cpp" compile="1" resource="0"
+            file="Source/HelperFunctions.cpp"/>
+      <FILE id="mzsJg1" name="HelperFunctions.h" compile="0" resource="0"
+            file="Source/HelperFunctions.h"/>
+      <FILE id="nzSh2N" name="WaveTableGenerator.cpp" compile="1" resource="0"
             file="Source/WaveTableGenerator.cpp"/>
-      <FILE id="hHFeO2" name="WaveTableGenerator.h" compile="0" resource="0"
+      <FILE id="fACSOy" name="WaveTableGenerator.h" compile="0" resource="0"
             file="Source/WaveTableGenerator.h"/>
       <FILE id="VGqVtq" name="cmp_downsampler.cpp" compile="1" resource="0"
             file="Source/cmp_downsampler.cpp"/>

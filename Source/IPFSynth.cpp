@@ -112,6 +112,7 @@ void IPFSynth::render(juce::AudioBuffer<float>& buffer, int beginSample, int end
         oscillator.setphaseMod(phaseMod, phasemod);
         oscillator.setampMod(ampMod, ampmod);
         oscillator.setfreqMod(freqMod, freqmod);
+        oscillator.fixedG = fixedG;
 
         setIPFRate(oscillator, ipf_rate);
 

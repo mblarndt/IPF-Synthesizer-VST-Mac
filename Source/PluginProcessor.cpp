@@ -29,8 +29,11 @@ IPFSynthesizerVSTAudioProcessor::IPFSynthesizerVSTAudioProcessor()
     addSliderParameter("gain", "Gain", NormalisableRange<float>(-100.0f, 20.0f, 0.1f), -10.0f);
     addSliderParameter("ampmod", "Amplitude Modulation", NormalisableRange<float>(0.0f, 10.0f, 0.1f), 1.0f);
     addSliderParameter("phasemod", "Phase Modulation", NormalisableRange<float>(0.0f, 2.0f, 0.01f), 1.0f);
-    addSliderParameter("freqmod", "Frequency Modulation", NormalisableRange<float>(0.0f, 10.0f, 0.01f), 1.0f);
+    addSliderParameter("freqmod", "Frequency Modulation", NormalisableRange<float>(0.0f, 50.0f, 1), 1.0f);
     //addSliderParameter("rate", "Rate", NormalisableRange<float>(0, 4, 0.25f), 1.0f);
+    addToggleParameter("ampmodToggle", "Amplitude Mod Toggle", true);
+    addToggleParameter("freqmodToggle", "Frequency Mod Toggle", false);
+    addToggleParameter("phasemodToggle", "Phase Mod Toggle", false);
     
     juce::ValueTree defaultState("MyPluginState");  // Erstelle eine ValueTree-Instanz
     apvts.state = defaultState;  // Weise die ValueTree-Instanz dem apvts-Objekt zu
@@ -160,6 +163,7 @@ void IPFSynthesizerVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     synth.ampMod = ampMod;
     synth.phaseMod = phaseMod;
     synth.freqMod = freqMod;
+    synth.fixedG = fixedG;
 
     //synth.ipf_rate = ipf_rate;
     synth.ipf_rate = 1;
@@ -226,5 +230,14 @@ void IPFSynthesizerVSTAudioProcessor::addSliderParameter(String id, String name,
         range,
         initialValue
     );
+    apvts.createAndAddParameter(std::move(parameter));
+}
+
+void IPFSynthesizerVSTAudioProcessor::addToggleParameter(String id, String name, bool initialValue)
+{
+    auto parameter = std::make_unique<juce::AudioParameterBool>(
+        ParameterID(id, 1),
+        name,
+        initialValue);
     apvts.createAndAddParameter(std::move(parameter));
 }
