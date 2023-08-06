@@ -37,6 +37,9 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     //File Selection Setup
     String fileText = String("Select File");
     button_init(button_file, fileText);
+    String helpText = String("!");
+    button_init(button_help, helpText);
+    button_help.setClickingTogglesState(true);
     
     //Gain Slider Setup
     dial_init(slider_gain, Slider::SliderStyle::LinearBarVertical, 0);
@@ -50,6 +53,22 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
     dial_init(dial_beta, Slider::SliderStyle::Rotary, 43, 0, 1, 0.01);
     dial_init(dial_gamma, Slider::SliderStyle::Rotary, 3, 0, 1, 0.01);
+    
+    StringArray modeItems;
+    modeItems.add("Fixed");
+    modeItems.add("Threshold");
+    modeItems.add("Stable");
+    modeItems.add("Bif.");
+    modeItems.add("Chaos");
+    dropdown_init(modeMenu, modeItems, 0);
+    
+    StringArray thresholdItems;
+    thresholdItems.add("100%");
+    thresholdItems.add("90%");
+    thresholdItems.add("80%");
+    thresholdItems.add("70%");
+    dropdown_init(thresholdMenu, thresholdItems, 0);
+    
 
     //Toggle Init
     toggle_init(toggle_bypass);
@@ -119,9 +138,34 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
 
 
     const char* txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData);
-
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    /*
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    readCSVFromString(txtData, &threshold90Mode);
+     */
+    
     audioProcessor.chosenWavetable = "sine";
+    
+    helpBox = juce::ImageCache::getFromMemory(BinaryData::helppng_png, BinaryData::helppng_pngSize);
 
     setupDone = true;
 
@@ -143,11 +187,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     
     shape_colour = Colour::fromRGB(58, 58, 58);
     
-    //Right Side - Volume Field
-    paint_shape(g, Rectangle<int>(695, 40, 105, 438), shape_colour);
     
     //Down Side - IPF Field
-    paint_shape(g, Rectangle<int>(0, 334, 508+ 187, 145), shape_colour);
+    paint_shape(g, Rectangle<int>(0, 334, 800, 145), shape_colour);
+    
+    //Right Side - Volume Field
+    paint_shape(g, Rectangle<int>(695, 40, 105, 294), shape_colour);
     
     //Middle Field
     paint_shape(g, Rectangle<int>(0, 48, 508+187, 286), shape_colour);
@@ -173,7 +218,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_label(g,dial_alpha, "Input Strength");
     paint_label(g,dial_beta, "1. Reflection");
     paint_label(g,dial_gamma, "2. Reflection");
-    paint_text(g, font, 18, text_colour, String("Gain"), 745.5, 440);
+    paint_text(g, font, 18, text_colour, String("Gain"), 745.5, 320);
     
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
     paint_text(g, font, 18, text_colour, String("Load Wave"), 93, 174 + 18);
@@ -187,7 +232,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
 
     //Header
     paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer "), 40.0, 15+ 18, false);
-    paint_text(g, font, 18, text_colour, String("Safe-Mode"), 660.0, 15+ 18, false);
+    paint_text(g, font, 18, text_colour, String("Help"), 700, 15+ 18, false);
+    
+    paint_text(g, font, 18, text_colour, String("Mode"), 710, 365, false);
+    paint_text(g, font, 18, text_colour, String("Threshold"), 710, 430, false);
+    
 
 
     // Größe und Position des Kreises
@@ -197,6 +246,18 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
     drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
     updateCircleColors();
+    
+    if(button_help.getToggleState() == true) {
+        g.drawImage(helpBox, Rectangle<float>(186, 48, 509, 291));
+        plot.setVisible(false);
+        radioButton_14_signal.setVisible(false);
+        radioButton_14_ipf.setVisible(false);
+    }
+    else {
+        plot.setVisible(true);
+        radioButton_14_signal.setVisible(true);
+        radioButton_14_ipf.setVisible(true);
+    }
 
     
 }
@@ -205,7 +266,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
 {
     
     //Bypass Toggle
-    toggle_bypass.setBounds(750, 14, 23, 23);
+    button_help.setBounds(750, 14, 23, 23);
 
     //Mod-Window
     int spacing = 55;
@@ -214,6 +275,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     toggle_phasemod.setBounds(150, 265 + spacing, diameter, diameter);
     toggle_freqmod.setBounds(150, 265 + spacing * 2,diameter, diameter);
     toggle_fixstate.setBounds(150, 265 + spacing * 3,diameter, diameter);
+    
+    modeMenu.setBounds(710, 370, 80, 30);
+    thresholdMenu.setBounds(710, 435, 80, 30);
 
     diameter = 50;
     dial_ampmod.setBounds(100, 252, diameter, diameter);
@@ -223,6 +287,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
 
     //Load Wavetable Window
     button_file.setBounds(36, 205, 114, 30);
+    
 
     //Wavetable Selection Window
     radioButton_13_sine.setBounds(14.37, 87, 79.04, 27.54);
@@ -232,7 +297,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
 
 
     //Gain Window
-    slider_gain.setBounds(729, 92.21, 37.12, 306.56);
+    slider_gain.setBounds(729, 60, 37.12, 220);
     
     // IPF-Parameter Window
     int startpos = 205;
@@ -250,7 +315,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     //IPF-Plot Window
     radioButton_14_ipf.setBounds(528, 70, 75, 25);
     radioButton_14_signal.setBounds(603, 70, 75, 25);
-    plot.setBounds(185, 62, 500, 270);
+    plot.setBounds(185, 62, 501, 270);
 }
 void IPFSynthesizerVSTAudioProcessorEditor::dial_init(juce::Slider& name, Slider::SliderStyle style, float initValue,int min, int max, float steps) {
     sliders.add(&name);
@@ -288,6 +353,14 @@ void IPFSynthesizerVSTAudioProcessorEditor::label_init(juce::Label& name, String
     name.setText(text, dontSendNotification);
     addAndMakeVisible(&name);
 }
+void IPFSynthesizerVSTAudioProcessorEditor::dropdown_init(juce::ComboBox& comboBox, const StringArray& items, int defaultIndex)
+{
+    comboBox.addItemList(items, 1);
+    comboBox.setSelectedId(defaultIndex + 1, juce::sendNotification);
+    comboBox.onChange = [this, nameCopy = &comboBox]() { dropdownValueChanged(nameCopy); };
+    addAndMakeVisible(comboBox);
+}
+
 void IPFSynthesizerVSTAudioProcessorEditor::paint_text(juce::Graphics& graphics, const juce::String& font, float size, Colour colour, const juce::String& text, int x, int y, bool centred) {
     juce::Font myFont(font, size, juce::Font::plain);
     graphics.setColour(colour);
@@ -528,7 +601,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
         {
             String btn = button->getButtonText();
             //DBG(btn + ": Button Click");
+                
         }
+        
     }
 
     for (auto* name : radioButtons)
@@ -553,11 +628,13 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                         plotSignal = true;
                         plot.xLim(0, 6414);
                         plot.yLim(-2, 2);
+                        plot.setBounds(185, 62, 510, 270);
                     }
                     else {
                         plotSignal = false;
                         plot.xLim(0, 104);
                         plot.yLim(-2, 2);
+                        plot.setBounds(185, 62, 510, 270);
                     }
                     reloadIPF();
                 }
@@ -570,7 +647,28 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
     }
 }
 
+void IPFSynthesizerVSTAudioProcessorEditor::dropdownValueChanged(juce::ComboBox* comboBox) {
+    String modeValue;
+    String thresholdValue;
+    
+    if (comboBox == &modeMenu) {
+        modeValue = comboBox->getText();
+        
+        if(modeValue != "Threshold") {
+            thresholdMenu.setEnabled(false);
+        }
+        else
+            thresholdMenu.setEnabled(true);
+    }
+    else if(comboBox == &thresholdMenu) {
+        thresholdValue = comboBox->getText();
+    }
+    updateShownList(modeValue, thresholdValue);
+}
 
+void IPFSynthesizerVSTAudioProcessorEditor::updateShownList(String mode, String threshold) {
+    
+}
 
 
 void IPFSynthesizerVSTAudioProcessorEditor::updateWaveTablePath()
@@ -828,39 +926,77 @@ void IPFSynthesizerVSTAudioProcessorEditor::drawColorfulCircle(Graphics& g, int 
 
 
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(const std::string& dataString)
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(const std::string& dataString , csvVectors* list)
 {
+    std::vector<float> g0;
     std::vector<float> alpha;
     std::vector<float> beta;
     std::vector<float> gamma;
     std::vector<float> behaviour;
     std::vector<float> percent;
-    std::vector<float> iterations;
     
     std::istringstream iss(dataString);
     std::string line;
     // Überspringe die erste Zeile (Header)
     std::getline(iss, line);
-    while (std::getline(iss, line)) {
-        std::stringstream ss(line);
-        std::string cell;
-        std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-        alpha.push_back(std::stof(cell));
-        std::getline(ss, cell, ';');
-        beta.push_back(std::stof(cell));
-        std::getline(ss, cell, ';');
-        gamma.push_back(std::stof(cell));
-        std::getline(ss, cell, ';');
-        behaviour.push_back(std::stof(cell));
-        std::getline(ss, cell, ';');
-        percent.push_back(std::stof(cell));
+    
+    if(list == &fixedMode) {
+        while (std::getline(iss, line)) {
+            std::stringstream ss(line);
+            std::string cell;
+            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+            g0.push_back(std::stof(cell));
+            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+            alpha.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            beta.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            gamma.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            behaviour.push_back(std::stof(cell));
+        }
     }
+    
 
-    csvAlpha = alpha;
-    csvBeta = beta;
-    csvGamma = gamma;
-    csvBehaviour = behaviour;
-    csvPercent = percent;
+    else if(list == &stableMode or list == &bifMode or list == &chaosMode) {
+        while (std::getline(iss, line)) {
+            std::stringstream ss(line);
+            std::string cell;
+            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+            g0.push_back(std::stof(cell));
+            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+            alpha.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            beta.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            gamma.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            percent.push_back(std::stof(cell));
+        }
+    }
+    else {
+        while (std::getline(iss, line)) {
+            std::stringstream ss(line);
+            std::string cell;
+            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+            alpha.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            beta.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            gamma.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            behaviour.push_back(std::stof(cell));
+            std::getline(ss, cell, ';');
+            percent.push_back(std::stof(cell));
+        }
+    }
+    
+    list->g0 = g0;
+    list->alpha = alpha;
+    list->beta = beta;
+    list->gamma = gamma;
+    list->behaviour = behaviour;
+    list->percent = percent;
 
     // Gib die Vektoren zurück
     return alpha;
@@ -875,10 +1011,10 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
     float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
 
-    for (size_t i = 0; i < csvAlpha.size(); i++) {
-        if (csvBeta[i] == beta && csvGamma[i] == gamma) {
-            percentage.push_back(csvPercent[i]);
-            behaviour.push_back(csvBehaviour[i]);
+    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
+        if (threshold90Mode.beta[i] == beta && threshold90Mode.gamma[i] == gamma) {
+            percentage.push_back(threshold90Mode.percent[i]);
+            behaviour.push_back(threshold90Mode.behaviour[i]);
         }
     }
 
@@ -891,10 +1027,10 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
 
-    for (size_t i = 0; i < csvAlpha.size(); i++) {
-        if (csvAlpha[i] == alpha && csvGamma[i] == gamma) {
-            percentage.push_back(csvPercent[i]);
-            behaviour.push_back(csvBehaviour[i]);
+    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
+        if (threshold90Mode.alpha[i] == alpha && threshold90Mode.gamma[i] == gamma) {
+            percentage.push_back(threshold90Mode.percent[i]);
+            behaviour.push_back(threshold90Mode.behaviour[i]);
         }
     }
 
@@ -908,10 +1044,10 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
 
-    for (size_t i = 0; i < csvAlpha.size(); i++) {
-        if (csvAlpha[i] == alpha && csvBeta[i] == beta) {
-            percentage.push_back(csvPercent[i]);
-            behaviour.push_back(csvBehaviour[i]);
+    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
+        if (threshold90Mode.alpha[i] == alpha && threshold90Mode.beta[i] == beta) {
+            percentage.push_back(threshold90Mode.percent[i]);
+            behaviour.push_back(threshold90Mode.behaviour[i]);
         }
     }
 

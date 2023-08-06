@@ -49,6 +49,7 @@ private:
     IPFSynthesizerVSTAudioProcessor& audioProcessor;
 
     TextButton button_file;
+    TextButton button_help;
     ToggleButton toggle_bypass;
     ToggleButton toggle_phasemod;
     ToggleButton toggle_freqmod;
@@ -62,6 +63,10 @@ private:
     TextButton radioButton_13_saw;
     TextButton radioButton_14_ipf;
     TextButton radioButton_14_signal;
+    
+    ComboBox modeMenu;
+    ComboBox thresholdMenu;
+    
     Slider slider_input;
     Slider slider_gain;
 
@@ -101,6 +106,9 @@ private:
     bool plotSignal;
     String previousBtn;
     bool setupDone;
+    bool showHelp;
+    
+    juce::Image helpBox;
 
     std::unique_ptr<FileChooser> chooser;
 
@@ -112,13 +120,26 @@ private:
     juce::Array<juce::TextButton*> radioButtons;
 
 
-
-    std::vector<float> csvAlpha;
-    std::vector<float> csvBeta;
-    std::vector<float> csvGamma;
-    std::vector<float> csvBehaviour;
-    std::vector<float> csvPercent;
-    std::vector<float> csvIteration;
+    class csvVectors {
+    public:
+        std::vector<float> g0;
+        std::vector<float> alpha;
+        std::vector<float> beta;
+        std::vector<float> gamma;
+        std::vector<float> behaviour;
+        std::vector<float> percent;
+    };
+    
+    csvVectors fixedMode;
+    csvVectors stableMode;
+    csvVectors bifMode;
+    csvVectors chaosMode;
+    
+    csvVectors threshold100Mode;
+    csvVectors threshold90Mode;
+    csvVectors threshold80Mode;
+    csvVectors threshold70Mode;
+    
 
     Array<Colour> alphaColours;
     Array<Colour> betaColours;
@@ -141,24 +162,28 @@ private:
     void radioButton_init(juce::TextButton& button, String& button_text, int id);
     void toggle_init(juce::ToggleButton& name);
     void label_init(juce::Label& name, String& text);
+    void dropdown_init(juce::ComboBox& comboBox, const StringArray& items, int defaultIndex);
     void paint_text(juce::Graphics& graphics, const juce::String& font, float size, Colour colour, const juce::String& text, int x, int y, bool centred = true);
     void paint_shape(juce::Graphics& graphics, Rectangle<int> bounds, Colour colour, bool dropShadow = true);
     void paint_shadow(juce::Graphics& graphics, Rectangle<int> bounds, Colour colour = Colour::fromRGBA(0, 0, 0, 100), int radius = 10, Point<int> offset = Point<int>(3, 3));
     void paint_label(juce::Graphics& graphics, Slider& name, String title);
     void sliderValueChanged(juce::Slider* slider);
     void buttonValueChanged(juce::Button* button);
+    void dropdownValueChanged(juce::ComboBox* comboBox);
     void openFileAsync();
     void adjustSliders();
     void updateWaveTablePath();
     void resetRange(juce::Slider& name, String ctrlID);
-    std::vector<float> arange(float start, float stop, float step = 1.0);
     
+    void updateShownList(String mode, String threshold = "None");
+    
+    std::vector<float> arange(float start, float stop, float step = 1.0);
     std::vector<float> calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal = false);
 
 
     void drawColorfulCircle(Graphics& g, int centerX, int centerY, int diameter, const Array<Colour>& colours);
 
-    std::vector<float> readCSVFromString(const std::string& dataString);
+    std::vector<float> readCSVFromString(const std::string& dataString, csvVectors* list);
 
     std::pair<std::vector<float>, std::vector<float>> getAlphaPercentage(float targetBeta, float targetGamma);
     std::pair<std::vector<float>, std::vector<float>> getBetaPercentage(float targetAlpha, float targetGamma);
