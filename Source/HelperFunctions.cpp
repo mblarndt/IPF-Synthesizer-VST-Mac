@@ -15,11 +15,14 @@ float HelperFunctions::compressSample(float sample, float threshold)
 {
     // Falls der Sample-Wert den Threshold überschreitet, komprimiere ihn
     if (std::abs(sample) >= threshold) {
+        float abssample = std::abs(sample);
         // Berechne den Kompressionsfaktor
         float compressionFactor = threshold / std::abs(sample);
+        
 
         // Komprimiere den Sample-Wert
         sample *= compressionFactor;
+        
     }
 
     return sample;

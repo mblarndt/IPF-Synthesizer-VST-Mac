@@ -81,4 +81,5 @@ private:
     float fadeCounter = 0;
     
     HelperFunctions helper;
+    dsp::Compressor<float> compressor;
 };

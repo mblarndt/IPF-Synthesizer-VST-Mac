@@ -72,6 +72,7 @@ float WavetableOscillator::getSample()
      
     
     float compressed_sample = helper.compressSample(sample);
+    //compressor.processSample(1, sample);
 
 
     return compressed_sample;
@@ -170,6 +171,8 @@ float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, fl
 {
     DBG(alpha);
     float g_pl;
+    
+    
     switch(ipf_counter) {
 
         case 0:

@@ -48,18 +48,18 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     slider_gain.setNumDecimalPlacesToDisplay(0);
 
     //IPF-Parameter Init
-    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 5, 0.01);
-    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 50, 0, 1, 0.01);
+    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 4, 0.1);
+    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 0.5, 0, 1, 0.01);
     dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 43, 0, 1, 0.01);
-    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 3, 0, 1, 0.01);
+    dial_init(dial_beta, Slider::SliderStyle::Rotary, 0, 0, 1, 0.01);
+    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 0, 0, 1, 0.01);
     
     StringArray modeItems;
     modeItems.add("Fixed");
     modeItems.add("Threshold");
-    modeItems.add("Stable");
-    modeItems.add("Bif.");
-    modeItems.add("Chaos");
+    //modeItems.add("Stable");
+    //modeItems.add("Bif.");
+    //modeItems.add("Chaos");
     dropdown_init(modeMenu, modeItems, 0);
     
     StringArray thresholdItems;
@@ -67,6 +67,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     thresholdItems.add("90%");
     thresholdItems.add("80%");
     thresholdItems.add("70%");
+    thresholdItems.add("60%");
     dropdown_init(thresholdMenu, thresholdItems, 0);
     
 
@@ -92,11 +93,6 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_phasemod.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
     dial_freqmod.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
 
-    //dial_init(dial_rate, Slider::SliderStyle::Rotary, 1);
-    //slider_input.setSliderStyle(juce::Slider::SliderStyle::TwoValueHorizontal); // Zwei Werte, horizontale Ausrichtung
-    //slider_input.setRange(0.0, 100.0, 1.0); // Minimaler Wert, Maximaler Wert, Schrittgröße
-    //slider_input.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
-
     //Value Tree Setup
     gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
     alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
@@ -109,7 +105,6 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     ampmodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "ampmodToggle", toggle_ampmod);
     freqmodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "freqmodToggle", toggle_freqmod);
     phasemodToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts, "phasemodToggle", toggle_phasemod);
-    //rateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "rate", dial_rate);
 
     addAndMakeVisible(plot);
 
@@ -125,7 +120,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     plotSignal = false;
     yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
     plot.yLim(-2, 2);
-    plot.xLim(0, 100);
+    plot.xLim(0, 300);
     
 
     plot.plot(yData);
@@ -136,36 +131,49 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     
     setLookAndFeel(&claf);
 
-
-    const char* txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
+    //Load CSV Lists
+    const char* txtData = reinterpret_cast<const char*>(BinaryData::results_fixed_csv);
+    readCSVFromString(txtData, &fixedMode);
+    
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_thresh_60_csv);
+    readCSVFromString(txtData, &threshold60Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_thresh_70_csv);
+    readCSVFromString(txtData, &threshold70Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_thresh_80_csv);
+    readCSVFromString(txtData, &threshold80Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_thresh_90_csv);
     readCSVFromString(txtData, &threshold90Mode);
+    
+    txtData = reinterpret_cast<const char*>(BinaryData::results_thresh_100_csv);
+    readCSVFromString(txtData, &threshold100Mode);
     
     /*
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
+    txtData = reinterpret_cast<const char*>(BinaryData::results_stable_csv);
+    readCSVFromString(txtData, &stableMode);
     
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
+    txtData = reinterpret_cast<const char*>(BinaryData::results_bif_csv);
+    readCSVFromString(txtData, &bifMode);
     
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
-    
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
-    
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
-    
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
-    
-    txtData = reinterpret_cast<const char*>(BinaryData::results_percentage_csv);
-    readCSVFromString(txtData, &threshold90Mode);
-     */
+    txtData = reinterpret_cast<const char*>(BinaryData::results_chaos_csv);
+    readCSVFromString(txtData, &chaosMode);
+    */
     
     audioProcessor.chosenWavetable = "sine";
     
     helpBox = juce::ImageCache::getFromMemory(BinaryData::helppng_png, BinaryData::helppng_pngSize);
+    
+    randomCounter = -50;
+    
+    toggle_freqmod.setToggleState(false, true);
+    audioProcessor.freqmod = false;
+    audioProcessor.phasemod = false;
+    audioProcessor.ampmod = true;
+    
+    dial_g.setEnabled(true);
 
     setupDone = true;
 
@@ -198,7 +206,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_shape(g, Rectangle<int>(0, 48, 508+187, 286), shape_colour);
     
     //Mod Field
-    paint_shape(g, Rectangle<int>(0, 249, 186, 230), shape_colour);
+    paint_shape(g, Rectangle<int>(0, 410, 186, 230), shape_colour);
+    
+    //Mod Field
+    paint_shape(g, Rectangle<int>(0, 249, 186, 160), shape_colour);
     
     //Load Wave Field
     paint_shape(g, Rectangle<int>(0, 165, 186, 84), shape_colour);
@@ -213,7 +224,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     String font = String("Arial");
     Colour text_colour = Colour::fromRGB(255, 255, 255);
     
-    paint_label(g,dial_g, "State");
+    paint_label(g,dial_g, "Init. Value");
     //paint_label(g,dial_rate, "Rate");
     paint_label(g,dial_alpha, "Input Strength");
     paint_label(g,dial_beta, "1. Reflection");
@@ -228,10 +239,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     paint_text(g, font, 18, text_colour, String("Amp-Mod"), 15, 265 + 20, false);
     paint_text(g, font, 18, text_colour, String("Phase-Mod"), 15, 265 + spacing + 20, false);
     paint_text(g, font, 18, text_colour, String("Freq-Mod"), 15, 265+ spacing * 2 + 20, false);
-    paint_text(g, font, 18, text_colour, String("Fix State"), 15, 265+ spacing * 3 + 20, false);
+    paint_text(g, font, 18, text_colour, String("Choose Initial"), 15, 265+ spacing * 2.8 + 25, false);
+    paint_text(g, font, 18, text_colour, String("Value"), 15, 265+ spacing * 3.2 + 25, false);
 
     //Header
-    paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer "), 40.0, 15+ 18, false);
+    paint_text(g, font, 18, text_colour, String("MBLA    |   IPF - Synthesizer "), 20.0, 15+ 18, false);
     paint_text(g, font, 18, text_colour, String("Help"), 700, 15+ 18, false);
     
     paint_text(g, font, 18, text_colour, String("Mode"), 710, 365, false);
@@ -245,7 +257,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     drawColorfulCircle(g, dial_alpha.getBounds().getX()+45, 406, diameter, alphaColours);
     drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
     drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
-    updateCircleColors();
+    //updateCircleColors();
     
     if(button_help.getToggleState() == true) {
         g.drawImage(helpBox, Rectangle<float>(186, 48, 509, 291));
@@ -258,7 +270,6 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
         radioButton_14_signal.setVisible(true);
         radioButton_14_ipf.setVisible(true);
     }
-
     
 }
 
@@ -274,7 +285,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     toggle_ampmod.setBounds(150, 265, diameter, diameter);
     toggle_phasemod.setBounds(150, 265 + spacing, diameter, diameter);
     toggle_freqmod.setBounds(150, 265 + spacing * 2,diameter, diameter);
-    toggle_fixstate.setBounds(150, 265 + spacing * 3,diameter, diameter);
+    toggle_fixstate.setBounds(150, 265 + spacing * 3.1,diameter, diameter);
     
     modeMenu.setBounds(710, 370, 80, 30);
     thresholdMenu.setBounds(710, 435, 80, 30);
@@ -407,8 +418,6 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         audioProcessor.alpha = value;
 
-        updateCircleColors();
-
         float new_beta_max = value;
         dial_beta.setRange(0.0, new_beta_max, 0.01);
 
@@ -437,7 +446,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
         if(value <= dial_beta.getValue())
             dial_alpha.setValue(dial_beta.getValue());
-
+        
+        
+        updateCircleColors(true, true, true);
+        
         dial_beta.repaint();
         dial_gamma.repaint();
     }
@@ -451,9 +463,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         if (value <= 0.0f)
             value = 0.00001f;
         
-        
-
-        updateCircleColors();
+    
 
         // Regel: alpha > beta
         if (value >= dial_alpha.getValue())
@@ -477,11 +487,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
             audioProcessor.gamma = new_max - 0.001;
 
         //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
+        updateCircleColors(true, true, true);
         dial_gamma.repaint();
     }
     else if (slider == &dial_gamma) {
         //plot.plot(yData);
-        updateCircleColors();
 
         float value = slider->getValue();
         if (value <= 0.0f)
@@ -495,6 +505,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
 
         audioProcessor.gamma = value;
     }
+    
     else if (slider == &dial_g) {
         audioProcessor.g = slider->getValue();
         reloadIPF();
@@ -520,7 +531,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         // Mindestwert und Maximalwert für die zufällige Zahl
 
         // Zufallszahlengenerator initialisieren
-        dial_g.setValue(1 / dial_alpha.getValue());
+        if(modeMenu.getSelectedItemIndex() != 0)
+            dial_g.setValue(1 / dial_alpha.getValue());
+        //dial_g.setValue(dial_alpha.getValue() + (dial_alpha.getValue() * randomCounter * (1/(1/dial_alpha.getValue()))));
+        //dial_g.setValue(dial_alpha.getValue() + (2 * (1/(100/audioProcessor.randomCounter))));
+        //DBG(randomCounter);
     }
         //dial_g.setValue((1/dial_alpha.getValue()));
 
@@ -539,6 +554,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     if (setupDone) {
         reloadIPF();
     }
+    
+    repaint();
+
 }
 
 
@@ -632,7 +650,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
                     }
                     else {
                         plotSignal = false;
-                        plot.xLim(0, 104);
+                        plot.xLim(0, 300);
                         plot.yLim(-2, 2);
                         plot.setBounds(185, 62, 510, 270);
                     }
@@ -654,16 +672,35 @@ void IPFSynthesizerVSTAudioProcessorEditor::dropdownValueChanged(juce::ComboBox*
     if (comboBox == &modeMenu) {
         modeValue = comboBox->getText();
         
+        if (modeValue == "Fixed") {
+            dial_g.setValue(1);
+            //dial_g.setEnabled(false);
+        }
+        else {
+            dial_g.setRange(0,4,0.1);
+            //dial_g.setEnabled(true);
+        }
+        
         if(modeValue != "Threshold") {
             thresholdMenu.setEnabled(false);
+            dial_g.setEnabled(true);
         }
-        else
+        else {
             thresholdMenu.setEnabled(true);
+            dial_g.setEnabled(false);
+            toggle_fixstate.setToggleState(false, true);
+        }
+        
+        if(modeValue == "Fixed")
+            toggle_fixstate.setToggleState(true, sendNotification);
     }
     else if(comboBox == &thresholdMenu) {
         thresholdValue = comboBox->getText();
     }
     updateShownList(modeValue, thresholdValue);
+    updateCircleColors();
+    repaint();
+    
 }
 
 void IPFSynthesizerVSTAudioProcessorEditor::updateShownList(String mode, String threshold) {
@@ -940,56 +977,23 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
     // Überspringe die erste Zeile (Header)
     std::getline(iss, line);
     
-    if(list == &fixedMode) {
-        while (std::getline(iss, line)) {
-            std::stringstream ss(line);
-            std::string cell;
-            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-            g0.push_back(std::stof(cell));
-            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-            alpha.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            beta.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            gamma.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            behaviour.push_back(std::stof(cell));
-        }
+    while (std::getline(iss, line)) {
+        std::stringstream ss(line);
+        std::string cell;
+        std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+        g0.push_back(std::stof(cell));
+        std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
+        alpha.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        beta.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        gamma.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        percent.push_back(std::stof(cell));
+        std::getline(ss, cell, ';');
+        behaviour.push_back(std::stof(cell));
     }
     
-
-    else if(list == &stableMode or list == &bifMode or list == &chaosMode) {
-        while (std::getline(iss, line)) {
-            std::stringstream ss(line);
-            std::string cell;
-            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-            g0.push_back(std::stof(cell));
-            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-            alpha.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            beta.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            gamma.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            percent.push_back(std::stof(cell));
-        }
-    }
-    else {
-        while (std::getline(iss, line)) {
-            std::stringstream ss(line);
-            std::string cell;
-            std::getline(ss, cell, ';'); // Verwende ';' als Trennzeichen
-            alpha.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            beta.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            gamma.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            behaviour.push_back(std::stof(cell));
-            std::getline(ss, cell, ';');
-            percent.push_back(std::stof(cell));
-        }
-    }
     
     list->g0 = g0;
     list->alpha = alpha;
@@ -1003,51 +1007,59 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::readCSVFromString(cons
 }
 
 
-std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getAlphaPercentage(float targetBeta, float targetGamma)
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getAlphaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector)
 {
     std::vector<float> percentage;
     std::vector<float> behaviour;
     
+    float g0 = roundToTwoDecimalPlaces(targetg0);
+    float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
-
-    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
-        if (threshold90Mode.beta[i] == beta && threshold90Mode.gamma[i] == gamma) {
-            percentage.push_back(threshold90Mode.percent[i]);
-            behaviour.push_back(threshold90Mode.behaviour[i]);
+    
+    for (size_t i = 0; i < usedVector.g0.size(); i++) {
+        if (usedVector.g0[i] == g0 && usedVector.beta[i] == beta && usedVector.gamma[i] == gamma) {
+            percentage.push_back(usedVector.percent[i]);
+            behaviour.push_back(usedVector.behaviour[i]);
         }
     }
 
     return make_pair(behaviour, percentage);
 }
 
-std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getBetaPercentage(float targetAlpha, float targetGamma) {
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getBetaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector) {
+    
     std::vector<float> percentage;
     std::vector<float> behaviour;
+    float g0 = roundToTwoDecimalPlaces(targetg0);
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
+    float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
 
-    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
-        if (threshold90Mode.alpha[i] == alpha && threshold90Mode.gamma[i] == gamma) {
-            percentage.push_back(threshold90Mode.percent[i]);
-            behaviour.push_back(threshold90Mode.behaviour[i]);
+    for (size_t i = 0; i < usedVector.g0.size(); i++) {
+        if (usedVector.g0[i] == g0 && usedVector.alpha[i] == alpha && usedVector.gamma[i] == gamma) {
+            percentage.push_back(usedVector.percent[i]);
+            behaviour.push_back(usedVector.behaviour[i]);
         }
     }
 
     return std::make_pair(behaviour, percentage);
 }
 
-std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getGammaPercentage(float targetAlpha, float targetBeta)
+std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcessorEditor::getGammaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector)
 {
     std::vector<float> percentage;
     std::vector<float> behaviour;
+    
+    float g0 = roundToTwoDecimalPlaces(targetg0);
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
+    float gamma = roundToTwoDecimalPlaces(targetGamma);
 
-    for (size_t i = 0; i < threshold90Mode.alpha.size(); i++) {
-        if (threshold90Mode.alpha[i] == alpha && threshold90Mode.beta[i] == beta) {
-            percentage.push_back(threshold90Mode.percent[i]);
-            behaviour.push_back(threshold90Mode.behaviour[i]);
+    for (size_t i = 0; i < usedVector.g0.size(); i++) {
+        if (usedVector.g0[i] == g0 && usedVector.alpha[i] == alpha && usedVector.beta[i] == beta) {
+            percentage.push_back(usedVector.percent[i]);
+            behaviour.push_back(usedVector.behaviour[i]);
         }
     }
 
@@ -1056,59 +1068,89 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
 
 Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::vector<float>& behaviour, const std::vector<float>& percentage) {
     Array<Colour> colours;
-    /*
-    for (const auto& value : iterations) {
-        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
-        if (value > 300 || value < 20) {
-            colours.add(Colours::orangered); // Markiere den Wert als rot
-        }
-        else {
-            colours.add(Colours::forestgreen); // Markiere den Wert als grün
-        }
-    }
-    */
+
     
-    for (const auto& value : behaviour) {
-        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
-        if (value == 0)
-            colours.add(Colours::orangered); // Markiere den Wert als rot
-        else if (value == 1)
-            colours.add(Colours::forestgreen); // Markiere den Wert als grün
-        else if (value == 2)
-            colours.add(Colours::blueviolet); // Markiere den Wert als grün
-        else if (value == 3)
-            colours.add(Colours::black); // Markiere den Wert als grün
-    }
-     /*
-    for (const auto& value : percentage) {
-        // Überprüfe, ob der Wert über 300 oder unter 10 liegt
-            colours.add(Colour::fromRGBA(25, 190, 0, (value / 100) * 255)); // Markiere den Wert als rot
+    int mode = modeMenu.getSelectedItemIndex();
+    //int threshold = thresholdMenu.getSelectedItemIndex();
+    
+
+        for (const auto& value : behaviour) {
+            if (value == 0 or value == 5)
+                colours.add(Colours::orangered); // Markiere den Wert als rot
+            else if (value == 1)
+                colours.add(Colours::forestgreen); // Markiere den Wert als grün
+            else if (value == 2)
+                colours.add(Colours::blueviolet); // Markiere den Wert als grün
+            else if (value == 3)
+                colours.add(Colours::black); // Markiere den Wert als grün
+            else if (value == 6)
+                colours.add(Colours::white); // Markiere den Wert als grün
+            }
+    
+    
+    /*
+    else if (mode == 2 or mode == 3 or mode == 4) {
+        for (const auto& value : percentage) {
+            // Überprüfe, ob der Wert über 300 oder unter 10 liegt
+                colours.add(Colour::fromRGBA(25, 190, 0, (value / 100) * 255)); // Markiere den Wert als rot
+        }
     }
     */
+
     return colours;
 }
 
-void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors() {
+void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors(bool updateAlpha, bool updateBeta, bool updateGamma) {
+    float g0val = dial_g.getValue();
     float alphaval = dial_alpha.getValue();
     float betaval = dial_beta.getValue();
     float gammaval = dial_gamma.getValue();
+    
     std::vector<float> behaviour;
     std::vector<float> percentage;
     
-    auto result = getAlphaPercentage(betaval, gammaval);
-    behaviour = result.first;
-    percentage = result.second;
-    alphaColours = generateColors(behaviour, percentage);
+    int mode = modeMenu.getSelectedItemIndex();
+    int threshold = thresholdMenu.getSelectedItemIndex();
+    csvVectors selectedVector;
     
-    result = getBetaPercentage(alphaval, gammaval);
-    behaviour = result.first;
-    percentage = result.second;
-    betaColours = generateColors(behaviour, percentage);
+    if(mode == 0) {selectedVector = fixedMode;}
+    else if(mode == 1) {
+        if(threshold == 0) {selectedVector = threshold100Mode;}
+        else if(threshold == 1) {selectedVector = threshold90Mode;}
+        else if(threshold == 2) {selectedVector = threshold80Mode;}
+        else if(threshold == 3) {selectedVector = threshold70Mode;}
+        else if(threshold == 4) {selectedVector = threshold60Mode;}
+    }
+    //else if(mode == 2) {selectedVector = stableMode;}
+    //else if(mode == 3) {selectedVector = bifMode;}
+    //else if(mode == 4) {selectedVector = chaosMode;}
     
-    result = getGammaPercentage(alphaval, betaval);
-    behaviour = result.first;
-    percentage = result.second;
-    gammaColours = generateColors(behaviour, percentage);
+    //DBG(threshold);
+    
+    if(mode != 0) {g0val = 0;}
+    
+    auto result = getAlphaPercentage(g0val,alphaval, betaval, gammaval, selectedVector);
+    
+    if(updateAlpha == true ) {
+        auto result = getAlphaPercentage(g0val,alphaval, betaval, gammaval, selectedVector);
+        behaviour = result.first;
+        percentage = result.second;
+        alphaColours = generateColors(behaviour, percentage);
+    }
+    
+    if(updateBeta == true) {
+        result = getBetaPercentage(g0val, alphaval,betaval, gammaval, selectedVector);
+        behaviour = result.first;
+        percentage = result.second;
+        betaColours = generateColors(behaviour, percentage);
+    }
+    
+    if(updateBeta == true) {
+        result = getGammaPercentage(g0val, alphaval, betaval,gammaval, selectedVector);
+        behaviour = result.first;
+        percentage = result.second;
+        gammaColours = generateColors(behaviour, percentage);
+    }
 }
 
 

@@ -77,6 +77,8 @@ public:
     float ampmod;
     float phasemod;
     float freqmod;
+    
+    int randomCounter;
 
     juce::String chosenWavetable;
     juce::String oldWavetable;
@@ -92,5 +94,5 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IPFSynthesizerVSTAudioProcessor)
     IPFSynth synth;
-    
+    dsp::Compressor<float> compressor;
 };

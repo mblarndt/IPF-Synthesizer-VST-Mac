@@ -131,6 +131,7 @@ private:
     };
     
     csvVectors fixedMode;
+    
     csvVectors stableMode;
     csvVectors bifMode;
     csvVectors chaosMode;
@@ -139,6 +140,7 @@ private:
     csvVectors threshold90Mode;
     csvVectors threshold80Mode;
     csvVectors threshold70Mode;
+    csvVectors threshold60Mode;
     
 
     Array<Colour> alphaColours;
@@ -146,7 +148,7 @@ private:
     Array<Colour> gammaColours;
 
     Colour shape_colour;
-
+    int randomCounter;
     
     // Erstellen Sie die y-Daten
     std::vector<std::vector<float>> yData = { {} };
@@ -185,19 +187,20 @@ private:
 
     std::vector<float> readCSVFromString(const std::string& dataString, csvVectors* list);
 
-    std::pair<std::vector<float>, std::vector<float>> getAlphaPercentage(float targetBeta, float targetGamma);
-    std::pair<std::vector<float>, std::vector<float>> getBetaPercentage(float targetAlpha, float targetGamma);
-    std::pair<std::vector<float>, std::vector<float>> getGammaPercentage(float targetAlpha, float targetBeta);
+    std::pair<std::vector<float>, std::vector<float>> getAlphaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector);
+    std::pair<std::vector<float>, std::vector<float>> getBetaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector);
+    std::pair<std::vector<float>, std::vector<float>> getGammaPercentage(float targetg0,float targetAlpha, float targetBeta, float targetGamma, csvVectors usedVector);
 
     Array<Colour> generateColors(const std::vector<float>& behaviour, const std::vector<float>& percentage);
 
-    void updateCircleColors();
+    void updateCircleColors(bool updateAlpha = true, bool updateBeta = true, bool updateGamma = true);
 
     float roundToTwoDecimalPlaces(float value);
     
     void reloadIPF();
     
     float linearInterpolation(float x, float x0, float y0, float x1, float y1);
+    
     
     std::vector<float> interpolateArray(const std::vector<float>& inputArray, int newLength);
 

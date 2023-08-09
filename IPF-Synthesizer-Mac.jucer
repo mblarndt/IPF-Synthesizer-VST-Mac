@@ -5,9 +5,26 @@
               companyName="MBLA" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="PDPLJ0" name="IPF-Synthesizer">
     <GROUP id="{1766074E-9233-E724-037B-73CDE2728D72}" name="Source">
+      <FILE id="W9bjpY" name="results_thresh_60.csv" compile="0" resource="1"
+            file="Source/data/results_thresh_60.csv"/>
+      <FILE id="RFQbST" name="results_thresh_70.csv" compile="0" resource="1"
+            file="Source/data/results_thresh_70.csv"/>
+      <FILE id="OobeDC" name="results_thresh_80.csv" compile="0" resource="1"
+            file="Source/data/results_thresh_80.csv"/>
+      <FILE id="qG12Fv" name="results_thresh_90.csv" compile="0" resource="1"
+            file="Source/data/results_thresh_90.csv"/>
+      <FILE id="TK4WPK" name="results_thresh_100.csv" compile="0" resource="1"
+            file="Source/data/results_thresh_100.csv"/>
+      <FILE id="awYPWm" name="results_fixed.csv" compile="0" resource="1"
+            file="Source/data/results_fixed.csv"/>
+      <FILE id="Qs4YPL" name="results_bif.csv" compile="0" resource="1" file="Source/data/results_bif.csv"/>
+      <FILE id="EBYdRz" name="results_chaos.csv" compile="0" resource="1"
+            file="Source/data/results_chaos.csv"/>
+      <FILE id="TKH9IS" name="results_stable.csv" compile="0" resource="1"
+            file="Source/data/results_stable.csv"/>
+      <FILE id="slNueL" name="ColorCoder.cpp" compile="1" resource="0" file="Source/ColorCoder.cpp"/>
+      <FILE id="oosmvL" name="ColorCoder.h" compile="0" resource="0" file="Source/ColorCoder.h"/>
       <FILE id="xGeU2d" name="helppng.png" compile="0" resource="1" file="Source/Assets/helppng.png"/>
-      <FILE id="bMXSUT" name="results_percentage.csv" compile="0" resource="1"
-            file="Source/data/results_percentage.csv"/>
       <FILE id="eQdrvo" name="HelperFunctions.cpp" compile="1" resource="0"
             file="Source/HelperFunctions.cpp"/>
       <FILE id="mzsJg1" name="HelperFunctions.h" compile="0" resource="0"
@@ -70,6 +87,7 @@
         <MODULEPATH id="juce_graphics" path="../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
     <XCODE_MAC targetFolder="Builds/MacOSX">
@@ -90,6 +108,7 @@
         <MODULEPATH id="juce_graphics" path="../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -103,6 +122,7 @@
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
