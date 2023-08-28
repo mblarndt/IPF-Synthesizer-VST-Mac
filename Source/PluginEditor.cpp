@@ -529,7 +529,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     
     if(toggle_fixstate.getToggleState() == false) {
         // Mindestwert und Maximalwert für die zufällige Zahl
-
+        dial_g.setValue(1 / dial_alpha.getValue());
         // Zufallszahlengenerator initialisieren
         if(modeMenu.getSelectedItemIndex() != 0)
             dial_g.setValue(1 / dial_alpha.getValue());
@@ -600,6 +600,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
             //audioProcessor.freqMod = value;
             if(value == false) {
                 dial_g.setEnabled(false);
+                dial_g.setValue(1 / dial_alpha.getValue());
             }
             else {
                 dial_g.setEnabled(true);
@@ -1012,7 +1013,11 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
     std::vector<float> percentage;
     std::vector<float> behaviour;
     
-    float g0 = roundToTwoDecimalPlaces(targetg0);
+    float g0;
+    if(roundToTwoDecimalPlaces(targetg0) <= 1.5)
+        g0 = 1;
+    else g0 = 2;
+    
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
@@ -1031,7 +1036,11 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
     
     std::vector<float> percentage;
     std::vector<float> behaviour;
-    float g0 = roundToTwoDecimalPlaces(targetg0);
+    float g0;
+    if(roundToTwoDecimalPlaces(targetg0) <= 1.5)
+        g0 = 1;
+    else g0 = 2;
+    
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
@@ -1050,8 +1059,11 @@ std::pair<std::vector<float>, std::vector<float>> IPFSynthesizerVSTAudioProcesso
 {
     std::vector<float> percentage;
     std::vector<float> behaviour;
+    float g0;
+    if(roundToTwoDecimalPlaces(targetg0) <= 1.5)
+        g0 = 1;
+    else g0 = 2;
     
-    float g0 = roundToTwoDecimalPlaces(targetg0);
     float alpha = roundToTwoDecimalPlaces(targetAlpha);
     float beta = roundToTwoDecimalPlaces(targetBeta);
     float gamma = roundToTwoDecimalPlaces(targetGamma);
@@ -1075,7 +1087,7 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
     
 
         for (const auto& value : behaviour) {
-            if (value == 0 or value == 5)
+            if (value == 0 or value == 5 or value ==6)
                 colours.add(Colours::orangered); // Markiere den Wert als rot
             else if (value == 1)
                 colours.add(Colours::forestgreen); // Markiere den Wert als grün
@@ -1083,8 +1095,8 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
                 colours.add(Colours::blueviolet); // Markiere den Wert als grün
             else if (value == 3)
                 colours.add(Colours::black); // Markiere den Wert als grün
-            else if (value == 6)
-                colours.add(Colours::white); // Markiere den Wert als grün
+            //else if (value == 6)
+                //colours.add(Colours::white); // Markiere den Wert als grün
             }
     
     

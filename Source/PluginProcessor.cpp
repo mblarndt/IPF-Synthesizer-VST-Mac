@@ -154,7 +154,7 @@ void IPFSynthesizerVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 {
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
-
+    
     synth.setValues(g, alpha, beta, gamma);
     synth.setVolume(volume);
 

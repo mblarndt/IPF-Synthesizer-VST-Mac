@@ -47,7 +47,9 @@ void IPFSynth::processBlock(juce::AudioBuffer<float>& buffer,
 
 void IPFSynth::setValues(float g, float alpha, float beta, float gamma)
 {
-    g_val = g;
+    if(fixedG)
+        g_val = g;
+    
     alpha_val = alpha;
     beta_val = beta;
     gamma_val = gamma;
@@ -76,6 +78,25 @@ void IPFSynth::handleMidiEvent(const juce::MidiMessage& midiMessage)
         oscillators[oscillatorId].setampMod(ampMod, ampmod);
         oscillators[oscillatorId].setphaseMod(ampMod, phasemod);
         oscillators[oscillatorId].setfreqMod(ampMod, freqmod);
+    
+        
+        if(fixedG == false) {
+            float velocity = midiMessage.getVelocity();
+            float gs = alpha_val + beta_val + gamma_val;
+            
+            if(velocity <= 64) {
+                float g0 = gs - (gs * (velocity / 64));
+                g_val = g0;
+                oscillators[oscillatorId].g_init = g0;
+            }
+            else {
+                float g0 = gs + (gs * ((velocity-64) / 64));
+                g_val = g0;
+                oscillators[oscillatorId].g_init = g0;
+            }
+        }
+        
+        
 
         //const auto velocity = midiMessage.getVelocity();
         //velocity_mapped = juce::jmap<float>(velocity, 0.3, 0.8);
@@ -96,6 +117,7 @@ void IPFSynth::handleMidiEvent(const juce::MidiMessage& midiMessage)
             oscillator.stop();
         }
     }
+
     
         
 }
