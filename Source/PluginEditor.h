@@ -74,12 +74,12 @@ private:
     Slider slider_fmod;
     Slider slider_ampmod;
     Slider slider_exp;
-    Slider dial_g;
+    Slider dialG;
     Slider dial_rate;
 
-    Slider dial_alpha;
-    Slider dial_beta;
-    Slider dial_gamma;
+    Slider dialAlpha;
+    Slider dialBeta;
+    Slider dialAlphaFine;
 
     Slider dial_phasemod;
     Slider dial_ampmod;
@@ -88,7 +88,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> alphaAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> betaAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gammaAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> alphaFineAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> rateAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> ampmodAttachment;
@@ -145,7 +145,7 @@ private:
 
     Array<Colour> alphaColours;
     Array<Colour> betaColours;
-    Array<Colour> gammaColours;
+    Array<Colour> alphaFine;
 
     Colour shape_colour;
     int randomCounter;

@@ -8,7 +8,7 @@ WavetableOscillator::WavetableOscillator(std::vector<float> waveTable, double sa
     : waveTable{ std::move(waveTable) },
     sampleRate{ sampleRate }
 {
-    g_delta = 0;
+    gDelta = 0;
 }
 
 float WavetableOscillator::getSample()
@@ -24,7 +24,7 @@ float WavetableOscillator::getSample()
     
     if(freqMod == true) {
         //float frequency = currentFrequency +  100 * g_delta * freqmod;
-        float frequency = 1/((1 / currentFrequency) * (1+(g_delta * freqmod)));
+        float frequency = 1/((1 / currentFrequency) * (1+(gDelta * freqmod)));
         //float frequency = 1 / ((1 / currentFrequency) * abs(g / g_plus));
         
         indexIncrement = frequency  * static_cast<float>(waveTable.size()) / static_cast<float>(sampleRate);
@@ -157,59 +157,59 @@ void WavetableOscillator::setfreqMod(bool state, float value)
 
 void WavetableOscillator::resetIPF()
 {
-    g = g_init;
-    g_pre = g_init;
-    g_pre_2 = g_init;
-    g_plus = 0;
-    g_delta = 0;
+    g = gInit;
+    gPre = gInit;
+    gPlus = 0;
+    gDelta = 0;
     amplitude = 0;
     ipf_counter = 0;
     fadeCounter = 0;
 }
 
-float WavetableOscillator::ipf(float alpha, float beta, float gamma, float g, float g_pre, float g_pre_2)
+float WavetableOscillator::ipf(float alpha, float beta, float alphaFine, float g, float g_pre)
 {
     DBG(alpha);
     float g_pl;
     
+    float lAlpha = alpha + alphaFine;
     
-    switch(ipf_counter) {
-
-        case 0:
-            g_pl = g - log( (1 / alpha) * (g));
-        case 1:
-            g_pl = g - log( (1 / alpha) * (g - (beta * exp(g - g_pre))));
-        default:
-            g_pl = g - log( (1 / alpha) * (g - (beta * exp(g - g_pre) + gamma * exp(g - g_pre_2) )  )  );
+    
+    if(ipf_counter == 0) {
+        float logArg = (1 / lAlpha) * (g);
+        if(logArg <= 0)
+            logArg = 0.5;
+        g_pl = g - log(logArg);
     }
+    else {
+        float logArg = (1 / lAlpha) * (g - (beta * exp(g - g_pre) )  );
+        if(logArg <= 0)
+            logArg = 0.5;
+        g_pl = g - log(logArg);
+    }
+    
     ipf_counter++;
-    
-    /*
-    //Prüfen ob Zahl komplex ist
-    if (!std::isfinite(g_pl)) {
-        g_pl = 0;
-    }
-    */
+
     return g_pl;
 }
 
 float WavetableOscillator::calculate_amp()
 {
-    g_plus = ipf(alpha, beta, gamma, g, g_pre, g_pre_2);
-    g_pre_2 = g_pre;
-    g_pre = g;
+    gPlus = ipf(alpha, beta, alphaFine, g, gPre);
+    
+    gPre = g;
     
     //const float g_mapped = remap(g, alpha, beta, gamma);
-    float gs = alpha + beta + gamma;
+    float gs = alpha + beta + alphaFine;
     float g_mapped = (g / gs) -  1;
-    const float g_plus_mapped = (g_plus / gs) - 1;
-    g_delta = abs(g - g_plus);
+    const float g_plus_mapped = (gPlus / gs) - 1;
     
-    g = g_plus;
+    gDelta = abs(gPlus - g);
+    
+    g = gPlus;
     
     
     //setPhaseShift(g_delta);
-    phaseShift = helper.calculatePhaseshift(g_delta);
+    phaseShift = helper.calculatePhaseshift(gDelta);
     
     float signalmod = g_plus_mapped * ampmod;
     amplitude = (signalmod + 1) * gs;
@@ -219,7 +219,7 @@ float WavetableOscillator::calculate_amp()
 
 void WavetableOscillator::setG(float newG)
 {
-    g_init = newG;
+    gInit = newG;
 }
 
 void WavetableOscillator::setAlpha(float newAlpha)
@@ -234,18 +234,18 @@ void WavetableOscillator::setBeta(float newBeta)
     //DBG("Beta" + String(beta));
 }
 
-void WavetableOscillator::setGamma(float newGamma)
+void WavetableOscillator::setAlphaFine(float newAlphaFine)
 {
-    gamma = round(newGamma*100)/100;
+    alphaFine = newAlphaFine*0.001;
     //DBG("Gamma" + String(gamma));
 }
 
-float WavetableOscillator::remap(float source, float alpha, float beta, float gamma)
+float WavetableOscillator::remap(float source, float alpha, float beta, float alphaFine)
 {
-    const float gs = alpha + beta + gamma;
-    const float gdiff = g_init - gs;
+    const float gs = alpha + beta + alphaFine;
+    const float gdiff = gInit - gs;
     float g_min = gs - gdiff;
-    float g_max = g_init;
+    float g_max = gInit;
     const float min_new = -1.0f;
     const float max_new = 1.0f;
 

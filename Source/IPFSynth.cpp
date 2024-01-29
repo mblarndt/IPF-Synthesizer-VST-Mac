@@ -62,7 +62,7 @@ void IPFSynth::setVolume(float newVolume)
 
 void IPFSynth::setIPFRate(WavetableOscillator &oscilator, float rate)
 {
-    oscilator.ipf_rate = rate;
+    oscilator.ipfRate = rate;
 }
 
 
@@ -87,12 +87,12 @@ void IPFSynth::handleMidiEvent(const juce::MidiMessage& midiMessage)
             if(velocity <= 64) {
                 float g0 = gs - (gs * (velocity / 64));
                 g_val = g0;
-                oscillators[oscillatorId].g_init = g0;
+                oscillators[oscillatorId].gInit = g0;
             }
             else {
                 float g0 = gs + (gs * ((velocity-64) / 64));
                 g_val = g0;
-                oscillators[oscillatorId].g_init = g0;
+                oscillators[oscillatorId].gInit = g0;
             }
         }
         
@@ -130,7 +130,7 @@ void IPFSynth::render(juce::AudioBuffer<float>& buffer, int beginSample, int end
         oscillator.setG(g_val);
         oscillator.setAlpha(alpha_val);
         oscillator.setBeta(beta_val);
-        oscillator.setGamma(gamma_val);
+        oscillator.setAlphaFine(gamma_val);
         oscillator.setphaseMod(phaseMod, phasemod);
         oscillator.setampMod(ampMod, ampmod);
         oscillator.setfreqMod(freqMod, freqmod);

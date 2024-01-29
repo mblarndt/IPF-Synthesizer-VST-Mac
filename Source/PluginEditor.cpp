@@ -48,11 +48,11 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     slider_gain.setNumDecimalPlacesToDisplay(0);
 
     //IPF-Parameter Init
-    dial_init(dial_g, Slider::SliderStyle::Rotary, 1, 0, 4, 0.1);
-    dial_init(dial_alpha, Slider::SliderStyle::Rotary, 0.5, 0, 1, 0.01);
-    dial_alpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
-    dial_init(dial_beta, Slider::SliderStyle::Rotary, 0, 0, 1, 0.01);
-    dial_init(dial_gamma, Slider::SliderStyle::Rotary, 0, 0, 1, 0.01);
+    dial_init(dialG, Slider::SliderStyle::Rotary, 1, 0, 4, 0.1);
+    dial_init(dialAlpha, Slider::SliderStyle::Rotary, 0.5, 0.35, 1, 0.01);
+    dialAlpha.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(1, 215, 50));
+    dial_init(dialAlphaFine, Slider::SliderStyle::Rotary, 0, -100, 100, 1);
+    dial_init(dialBeta, Slider::SliderStyle::Rotary, 0, 0, 110, 1);
     
     StringArray modeItems;
     modeItems.add("Fixed");
@@ -94,10 +94,10 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     dial_freqmod.setTextBoxStyle(juce::Slider::NoTextBox, false, 50, 15);
 
     //Value Tree Setup
-    gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dial_g);
-    alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dial_alpha);
-    betaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "beta", dial_beta);
-    gammaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gamma", dial_gamma);
+    gAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "g", dialG);
+    alphaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alpha", dialAlpha);
+    betaAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "beta", dialBeta);
+    alphaFineAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "alphafine", dialAlphaFine);
     gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "gain", slider_gain);
     ampmodAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "ampmod", dial_ampmod);
     phasemodAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "phasemod", dial_phasemod);
@@ -118,7 +118,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     // Set Plot Parameters
     //plot.xLim(0, 500);
     plotSignal = false;
-    yData[0] = calculateIPF(1, dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
+    yData[0] = calculateIPF(1, dialAlpha.getValue(), dialBeta.getValue(), dialAlphaFine.getValue(), plotSignal);
     plot.yLim(-2, 2);
     plot.xLim(0, 300);
     
@@ -173,7 +173,7 @@ IPFSynthesizerVSTAudioProcessorEditor::IPFSynthesizerVSTAudioProcessorEditor(IPF
     audioProcessor.phasemod = false;
     audioProcessor.ampmod = true;
     
-    dial_g.setEnabled(true);
+    dialG.setEnabled(true);
 
     setupDone = true;
 
@@ -224,11 +224,12 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     String font = String("Arial");
     Colour text_colour = Colour::fromRGB(255, 255, 255);
     
-    paint_label(g,dial_g, "Init. Value");
+    paint_label(g,dialG, "Init. Value");
     //paint_label(g,dial_rate, "Rate");
-    paint_label(g,dial_alpha, "Input Strength");
-    paint_label(g,dial_beta, "1. Reflection");
-    paint_label(g,dial_gamma, "2. Reflection");
+    paint_label(g,dialAlpha, "Excitation");
+    paint_label(g,dialAlphaFine, "Excitation Fine");
+    paint_label(g,dialBeta, "Reflection");
+    
     paint_text(g, font, 18, text_colour, String("Gain"), 745.5, 320);
     
     paint_text(g, font, 18, text_colour, String("Wavetable"), 93, 58 + 18);
@@ -254,9 +255,9 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint(juce::Graphics& g)
     // Größe und Position des Kreises
     int diameter = 67;
     // Zeichne den Kreis mit den Bereichen
-    drawColorfulCircle(g, dial_alpha.getBounds().getX()+45, 406, diameter, alphaColours);
-    drawColorfulCircle(g, dial_beta.getBounds().getX()+45, 406, diameter, betaColours);
-    drawColorfulCircle(g, dial_gamma.getBounds().getX() + 45, 406, diameter, gammaColours);
+    drawColorfulCircle(g, dialAlpha.getBounds().getX()+45, 406, diameter, alphaColours);
+    drawColorfulCircle(g, dialBeta.getBounds().getX()+45, 406, diameter, betaColours);
+    drawColorfulCircle(g, dialAlphaFine.getBounds().getX() + 45, 406, diameter, alphaFine);
     //updateCircleColors();
     
     if(button_help.getToggleState() == true) {
@@ -316,10 +317,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::resized()
     int margin = 125;
     diameter = 90;
     //dial_rate.setBounds(0, 369.5, 90.0, 90.0);
-    dial_g.setBounds(startpos, y_pos, diameter, diameter);
-    dial_alpha.setBounds(startpos + margin, y_pos, diameter, diameter);
-    dial_beta.setBounds(startpos + margin * 2, y_pos, diameter, diameter);
-    dial_gamma.setBounds(startpos + margin * 3, y_pos, diameter, diameter);
+    dialG.setBounds(startpos, y_pos, diameter, diameter);
+    dialAlpha.setBounds(startpos + margin, y_pos, diameter, diameter);
+    dialAlphaFine.setBounds(startpos + margin * 2, y_pos, diameter, diameter);
+    dialBeta.setBounds(startpos + margin * 3, y_pos, diameter, diameter);
     //slider_input.setBounds(215, 184, 250, 20);
 
 
@@ -408,7 +409,7 @@ void IPFSynthesizerVSTAudioProcessorEditor::paint_label(juce::Graphics& graphics
 void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
 
-    if (slider == &dial_alpha)
+    if (slider == &dialAlpha)
     {
         
         float value = slider->getValue();
@@ -417,45 +418,15 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
         
 
         audioProcessor.alpha = value;
-
-        float new_beta_max = value;
-        dial_beta.setRange(0.0, new_beta_max, 0.01);
-
-        // Regel: alpha > beta
-        if (audioProcessor.beta >= new_beta_max)
-            audioProcessor.beta = new_beta_max;
-
-        
-
-        // dial_beta.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_beta_max, 0));
-
-        float new_gamma_max = dial_beta.getValue();
-
-        // Regel: beta + gamma <= alpha
-        if (new_gamma_max >= (value - dial_beta.getValue()))
-            new_gamma_max = value - dial_beta.getValue() - 0.001;
-        if (new_gamma_max <= 0.0f)
-            new_gamma_max = 0.00001f;
-
-        dial_gamma.setRange(0.0, new_gamma_max, 0.01);
-
-        // Regel: gamma <= new_gamma_max
-        if (dial_gamma.getValue() >= new_gamma_max)
-            audioProcessor.gamma = new_gamma_max;
-
-        //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_gamma_max, 0));
-        if(value <= dial_beta.getValue())
-            dial_alpha.setValue(dial_beta.getValue());
-        
         
         updateCircleColors(true, true, true);
         
-        dial_beta.repaint();
-        dial_gamma.repaint();
+        dialBeta.repaint();
+        dialAlphaFine.repaint();
     }
 
 
-    else if (slider == &dial_beta) {
+    else if (slider == &dialBeta) {
         //plot.plot(yData);
         
         
@@ -466,47 +437,25 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     
 
         // Regel: alpha > beta
-        if (value >= dial_alpha.getValue())
+        if (value >= dialAlpha.getValue())
             value = audioProcessor.alpha - 0.00001f;
 
         audioProcessor.beta = value;
 
-        float new_max = value;
-
-        // Regel: gamma <= alpha - beta
-        if (new_max > (dial_alpha.getValue() - value))
-            new_max = dial_alpha.getValue() - value;
-
-        if (new_max <= 0.0f)
-            new_max = 0.01f;
-
-        dial_gamma.setRange(0.0, new_max, 0.01);
-
-        // Regel: gamma <= new_max
-        if (dial_gamma.getValue() >= new_max)
-            audioProcessor.gamma = new_max - 0.001;
-
-        //dial_gamma.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGB(250, 250 * new_max, 0));
         updateCircleColors(true, true, true);
-        dial_gamma.repaint();
+        dialAlphaFine.repaint();
     }
-    else if (slider == &dial_gamma) {
+    else if (slider == &dialAlphaFine) {
         //plot.plot(yData);
 
         float value = slider->getValue();
         if (value <= 0.0f)
             value = 0.00001f;
 
-        
-
-        // Regel: beta > gamma
-        if (value >= audioProcessor.beta)
-            value = audioProcessor.beta - 0.001f;
-
-        audioProcessor.gamma = value;
+        audioProcessor.alphaFine = value;
     }
     
-    else if (slider == &dial_g) {
+    else if (slider == &dialG) {
         audioProcessor.g = slider->getValue();
         reloadIPF();
     }
@@ -529,10 +478,10 @@ void IPFSynthesizerVSTAudioProcessorEditor::sliderValueChanged(juce::Slider* sli
     
     if(toggle_fixstate.getToggleState() == false) {
         // Mindestwert und Maximalwert für die zufällige Zahl
-        dial_g.setValue(1 / dial_alpha.getValue());
+        dialG.setValue(1 / dialAlpha.getValue());
         // Zufallszahlengenerator initialisieren
         if(modeMenu.getSelectedItemIndex() != 0)
-            dial_g.setValue(1 / dial_alpha.getValue());
+            dialG.setValue(1 / dialAlpha.getValue());
         //dial_g.setValue(dial_alpha.getValue() + (dial_alpha.getValue() * randomCounter * (1/(1/dial_alpha.getValue()))));
         //dial_g.setValue(dial_alpha.getValue() + (2 * (1/(100/audioProcessor.randomCounter))));
         //DBG(randomCounter);
@@ -599,11 +548,11 @@ void IPFSynthesizerVSTAudioProcessorEditor::buttonValueChanged(juce::Button* but
             bool value = button->getToggleState();
             //audioProcessor.freqMod = value;
             if(value == false) {
-                dial_g.setEnabled(false);
-                dial_g.setValue(1 / dial_alpha.getValue());
+                dialG.setEnabled(false);
+                dialG.setValue(1 / dialAlpha.getValue());
             }
             else {
-                dial_g.setEnabled(true);
+                dialG.setEnabled(true);
             }
             audioProcessor.fixedG = value;
                 
@@ -674,21 +623,21 @@ void IPFSynthesizerVSTAudioProcessorEditor::dropdownValueChanged(juce::ComboBox*
         modeValue = comboBox->getText();
         
         if (modeValue == "Fixed") {
-            dial_g.setValue(1);
+            dialG.setValue(1);
             //dial_g.setEnabled(false);
         }
         else {
-            dial_g.setRange(0,4,0.1);
+            dialG.setRange(0,4,0.1);
             //dial_g.setEnabled(true);
         }
         
         if(modeValue != "Threshold") {
             thresholdMenu.setEnabled(false);
-            dial_g.setEnabled(true);
+            dialG.setEnabled(true);
         }
         else {
             thresholdMenu.setEnabled(true);
-            dial_g.setEnabled(false);
+            dialG.setEnabled(false);
             toggle_fixstate.setToggleState(false, true);
         }
         
@@ -787,19 +736,21 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::arange(float start, fl
     return result;
 }
 
-std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVal, float alphaVal, float betaVal, float gammaVal, bool calcSignal)
+std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVal, float alphaVal, float betaVal, float alphaFineVal, bool calcSignal)
 {
     float g0 = gVal;
     float g = g0;
-    float g_pre_1 = 1;
-    float g_pre_2 = 1;
-    float g_plus = 0;
-
+    float gPre = 1;
+    float gPlus = 0;
     
-    float gs = alphaVal + betaVal + gammaVal;
+    float alpha = alphaVal + alphaFineVal*0.001;
+
+    float gs = alpha + betaVal;
     
     float g_ampmod;
     float g_signalmod;
+    
+    
     
 
 
@@ -814,49 +765,46 @@ std::vector<float> IPFSynthesizerVSTAudioProcessorEditor::calculateIPF(float gVa
     std::vector<float> output;
     std::vector<float> nullVector(500, 0);
 
-    
     int max_iterations = 300;  // Maximale Anzahl von Iterationen
-    if(alphaVal != 0 and g != 0) {
+    if(alpha != 0 and g != 0) {
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             
-            g_plus = g - std::log((1 / alphaVal) * (g - (betaVal * std::exp(g - g_pre_1) + gammaVal * std::exp(g - g_pre_2))));
+            double logArg = (1 / alpha) * (g - (betaVal * std::exp(g - gPre)));
             
-            //Prüfen ob Zahl komplex ist
-            if (!std::isfinite(g_plus)) {
-                return nullVector;
-            }
+            if(logArg <= 0)
+                logArg = 0.5;
+            
+            gPlus = g - std::log(logArg);
         
-            
             // Neuen Wert dem Array hinzufügen
-            g_array.push_back(g_plus);
+            g_array.push_back(gPlus);
             
             
             // Normiere Wert und füge sie einem Array hinzu
-            float g_plus_norm = ((g_plus) / gs) - 1;
-            g_plus_normed_array.push_back(g_plus_norm);
+            float gPlusNorm = ((gPlus) / gs) - 1;
+            g_plus_normed_array.push_back(gPlusNorm);
 
             
             // Berechne Werte Differenz
-            float g_delta = abs(g - g_plus);
+            float gDelta = abs(gPlus - g);
             
             //Berechne Frequenzmodulation
-            float freqshift = g_delta;
+            float freqshift = gDelta;
             freqshift_array.push_back(freqshift);
 
-            
-            float phaseshift = helper.calculatePhaseshift(g_delta);
+            float phaseshift = helper.calculatePhaseshift(gDelta);
             phaseshift_array.push_back(phaseshift);
             
             //normierten Zustand mit Faktor vom Regler verrechnen
-            g_ampmod = g_plus_norm * dial_ampmod.getValue();
+            g_ampmod = gPlusNorm * dial_ampmod.getValue();
+            
             //Wieder zu ursprünglicher Form bringen
             g_signalmod = (g_ampmod + 1) * gs;
             g_ampmod_array.push_back(g_signalmod);
             
             //Werte nach hinten rücken
-            g_pre_2 = g_pre_1;
-            g_pre_1 = g;
-            g = g_plus;
+            gPre = g;
+            g = gPlus;
         }
         
         //output = g_ampmod_array;
@@ -1113,10 +1061,10 @@ Array<Colour> IPFSynthesizerVSTAudioProcessorEditor::generateColors(const std::v
 }
 
 void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors(bool updateAlpha, bool updateBeta, bool updateGamma) {
-    float g0val = dial_g.getValue();
-    float alphaval = dial_alpha.getValue();
-    float betaval = dial_beta.getValue();
-    float gammaval = dial_gamma.getValue();
+    float g0val = dialG.getValue();
+    float alphaval = dialAlpha.getValue();
+    float betaval = dialBeta.getValue();
+    float alphaFineVal = dialAlphaFine.getValue();
     
     std::vector<float> behaviour;
     std::vector<float> percentage;
@@ -1141,27 +1089,27 @@ void IPFSynthesizerVSTAudioProcessorEditor::updateCircleColors(bool updateAlpha,
     
     if(mode != 0) {g0val = 0;}
     
-    auto result = getAlphaPercentage(g0val,alphaval, betaval, gammaval, selectedVector);
+    auto result = getAlphaPercentage(g0val,alphaval, betaval, alphaFineVal, selectedVector);
     
     if(updateAlpha == true ) {
-        auto result = getAlphaPercentage(g0val,alphaval, betaval, gammaval, selectedVector);
+        auto result = getAlphaPercentage(g0val,alphaval, betaval, alphaFineVal, selectedVector);
         behaviour = result.first;
         percentage = result.second;
         alphaColours = generateColors(behaviour, percentage);
     }
     
     if(updateBeta == true) {
-        result = getBetaPercentage(g0val, alphaval,betaval, gammaval, selectedVector);
+        result = getBetaPercentage(g0val, alphaval,betaval, alphaFineVal, selectedVector);
         behaviour = result.first;
         percentage = result.second;
         betaColours = generateColors(behaviour, percentage);
     }
     
     if(updateBeta == true) {
-        result = getGammaPercentage(g0val, alphaval, betaval,gammaval, selectedVector);
+        result = getGammaPercentage(g0val, alphaval, betaval,alphaFineVal, selectedVector);
         behaviour = result.first;
         percentage = result.second;
-        gammaColours = generateColors(behaviour, percentage);
+        alphaFine = generateColors(behaviour, percentage);
     }
 }
 
@@ -1173,7 +1121,7 @@ float IPFSynthesizerVSTAudioProcessorEditor::roundToTwoDecimalPlaces(float value
 }
 
 void IPFSynthesizerVSTAudioProcessorEditor::reloadIPF() {
-    yData[0] = calculateIPF(dial_g.getValue(), dial_alpha.getValue(), dial_beta.getValue(), dial_gamma.getValue(), plotSignal);
+    yData[0] = calculateIPF(dialG.getValue(), dialAlpha.getValue(), dialBeta.getValue(), dialAlphaFine.getValue(), plotSignal);
     plot.plot(yData); // Plot using time values on x-axis
 }
 

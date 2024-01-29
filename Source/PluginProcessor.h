@@ -64,7 +64,7 @@ public:
     float g;
     float alpha;
     float beta;
-    float gamma;
+    float alphaFine;
 
     float ipf_rate;
     float volume;
